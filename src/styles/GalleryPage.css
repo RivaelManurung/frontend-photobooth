@@ -1,0 +1,92 @@
+.gallery-container {
+    min-height: 100vh;
+    background-color: #0f0f0f;
+    color: white;
+    padding-top: 80px;
+    /* Space for fixed navbar */
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(94, 231, 223, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(180, 144, 202, 0.05) 0%, transparent 20%);
+}
+
+.gallery-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.gallery-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.gallery-header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.gallery-header p {
+    color: #888;
+    font-size: 1.1rem;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.gallery-item {
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+}
+
+.gallery-image-placeholder {
+    width: 100%;
+    aspect-ratio: 3/4;
+    /* Standard photo strip aspect ratioish */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.gallery-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gallery-item-footer .date {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.gallery-item-footer .actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
