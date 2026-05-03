@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,6 @@ RUN npm install
 COPY . .
 
 # Build the application
-# Pastikan VITE_API_URL sudah sesuai (bisa diatur via Railway Environment Variables)
 RUN npm run build
 
 # Production stage
@@ -32,6 +31,5 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
-# Railway provides the PORT environment variable. Nginx needs to listen on it.
-# We use a script to replace the port 80 with $PORT at runtime.
-CMD sed -i "s/listen 80;/listen ${PORT:-80};/" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
+# Use a shell script to replace the port and start nginx
+CMD ["/bin/sh", "-c", "sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
