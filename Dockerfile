@@ -26,5 +26,5 @@ RUN npm install -g serve
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Start the server on the port provided by Railway
-CMD ["sh", "-c", "serve -s dist -l $PORT"]
+# Start the server on the port provided by Railway, listening on all interfaces
+CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:$PORT"]
