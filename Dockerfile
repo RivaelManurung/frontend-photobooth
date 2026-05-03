@@ -20,11 +20,24 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install 'serve' package to serve static files
-RUN npm install -g serve
+# Install express for serving static files
+RUN npm install express
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Start the server on the port provided by Railway, listening on all interfaces
-CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:$PORT"]
+# Create a simple express server
+RUN echo "const express = require('express'); \
+const path = require('path'); \
+const app = express(); \
+const port = process.env.PORT || 8080; \
+app.use(express.static(path.join(__dirname, 'dist'))); \
+app.get('*', (req, res) => { \
+  res.sendFile(path.join(__dirname, 'dist', 'index.html')); \
+}); \
+app.listen(port, '0.0.0.0', () => { \
+  console.log('🚀 Admin Frontend is running on port ' + port); \
+});" > server.js
+
+# Start the server
+CMD ["node", "server.js"]
