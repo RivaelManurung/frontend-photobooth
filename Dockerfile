@@ -21,15 +21,21 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create a custom nginx config to handle SPA routing and Railway's PORT
-RUN echo 'server { \
-    listen 80; \
-    location / { \
+# Create a custom nginx config
+RUN echo 'worker_processes 1; \
+events { worker_connections 1024; } \
+http { \
+    include /etc/nginx/mime.types; \
+    server { \
+        listen 80; \
+        server_name localhost; \
         root /usr/share/nginx/html; \
-        index index.html index.htm; \
-        try_files $uri $uri/ /index.html; \
+        index index.html; \
+        location / { \
+            try_files $uri $uri/ /index.html; \
+        } \
     } \
-}' > /etc/nginx/conf.d/default.conf
+}' > /etc/nginx/nginx.conf
 
-# Use a shell script to replace the port and start nginx
-CMD ["/bin/sh", "-c", "sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Use a shell script to replace the port 80 with the Railway PORT and start nginx
+CMD ["/bin/sh", "-c", "sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
