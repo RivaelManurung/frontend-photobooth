@@ -16,27 +16,15 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install 'serve' package to serve static files
+RUN npm install -g serve
 
 # Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist ./dist
 
-# Create a very simple and robust nginx config
-RUN echo 'worker_processes 1; \
-daemon off; \
-events { worker_connections 1024; } \
-http { \
-    include /etc/nginx/mime.types; \
-    sendfile on; \
-    server { \
-        listen ${PORT}; \
-        root /usr/share/nginx/html; \
-        index index.html; \
-        location / { \
-            try_files $uri $uri/ /index.html; \
-        } \
-    } \
-}' > /etc/nginx/nginx.conf.template
-
-# We use a custom CMD to ensure envsubst runs correctly on our custom config
-CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -c /etc/nginx/nginx.conf"]
+# Start the server on the port provided by Railway
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
