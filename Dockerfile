@@ -21,16 +21,22 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create a custom nginx template
-RUN mkdir -p /etc/nginx/templates && echo 'server { \
-    listen ${PORT}; \
-    location / { \
+# Create a very simple and robust nginx config
+RUN echo 'worker_processes 1; \
+daemon off; \
+events { worker_connections 1024; } \
+http { \
+    include /etc/nginx/mime.types; \
+    sendfile on; \
+    server { \
+        listen ${PORT}; \
         root /usr/share/nginx/html; \
-        index index.html index.htm; \
-        try_files $uri $uri/ /index.html; \
+        index index.html; \
+        location / { \
+            try_files $uri $uri/ /index.html; \
+        } \
     } \
-}' > /etc/nginx/templates/default.conf.template
+}' > /etc/nginx/nginx.conf.template
 
-# The official nginx image will automatically run envsubst on any .template files 
-# in /etc/nginx/templates/ and output them to /etc/nginx/conf.d/
-CMD ["nginx", "-g", "daemon off;"]
+# We use a custom CMD to ensure envsubst runs correctly on our custom config
+CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -c /etc/nginx/nginx.conf"]
