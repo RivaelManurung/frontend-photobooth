@@ -24,9 +24,34 @@
     align-items: center;
     gap: 0.75rem;
     perspective: 1000px;
+    /* We use a fixed width for the container and scale the large canvas inside it */
+    width: 360px; 
 }
 
-/* Template name badge under the strip */
+/* High-res canvas scaled down for UI preview */
+.photo-strip-canvas {
+    transform-origin: top center;
+    /* This formula scales a large canvas (e.g. 1200px) down to fit a smaller container (e.g. 320px) */
+    /* We'll handle the actual scale factor in a wrapper or via dynamic style if needed, 
+       but for now we'll use a fixed width and let object-fit/transform handle it in JSX or just set scale */
+    scale: 0.28; /* Approx 340/1200 */
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.3);
+    margin-bottom: -1200px; /* Offset the space taken by original size */
+}
+
+/* Container to handle the scaled preview cleanly */
+.strip-preview-container {
+    height: auto;
+    overflow: visible;
+}
+
+/* Wrapper to prevent layout jump from scaled element */
+.photo-strip-canvas {
+    zoom: 0.28; /* Cleaner than transform for layout */
+    -moz-transform: scale(0.28);
+    -moz-transform-origin: top center;
+}
+
 .template-name-badge {
     font-size: 0.75rem;
     font-weight: 700;
@@ -34,38 +59,13 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     background: rgba(255,255,255,0.8);
-    padding: 4px 12px;
+    padding: 6px 16px;
     border-radius: 20px;
     backdrop-filter: blur(4px);
+    margin-top: 1rem;
+    z-index: 10;
 }
 
-/* Base Photo Strip — position:relative required for overlay */
-.photo-strip {
-    position: relative;
-    width: 320px;
-    min-height: 600px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    transition: all 0.3s;
-    padding: 20px;
-    overflow: hidden;
-}
-
-
-/* Default Strip Content Layout */
-.strip-content {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    position: relative; /* sit above the overlay */
-    z-index: 1;
-}
-
-/* Restore template button in tools panel */
 .restore-btn {
     display: flex;
     align-items: center;
@@ -86,58 +86,18 @@
     color: white;
 }
 
-
-.branding {
-    font-weight: 900;
-    letter-spacing: 2px;
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-}
-
-.strip-photo-frame {
-    width: 100%;
-    aspect-ratio: 4/3;
-    background: #eee;
-    overflow: hidden;
-}
-
-.strip-photo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
 /* Filters */
-.filter-bw {
-    filter: grayscale(100%);
-}
-
-.filter-sepia {
-    filter: sepia(0.8) contrast(1.2);
-}
-
-.filter-vivid {
-    filter: saturate(1.5) contrast(1.1);
-}
-
-.filter-none {
-    filter: none;
-}
-
-.date {
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: 600;
-    margin-top: 10px;
-    font-size: 0.8rem;
-}
+.filter-bw { filter: grayscale(100%); }
+.filter-sepia { filter: sepia(0.8) contrast(1.2); }
+.filter-vivid { filter: saturate(1.5) contrast(1.1); }
+.filter-none { filter: none; }
 
 /* Tools Panel */
 .tools-panel {
     background: white;
     padding: 2rem;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-card);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     width: 350px;
     display: flex;
     flex-direction: column;
@@ -158,31 +118,23 @@
     color: #636e72;
 }
 
-/* New Template Picker (Grid of dots) */
 .template-picker {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.8rem;
 }
 
 .template-dot {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     cursor: pointer;
     transition: transform 0.2s;
-    border: 2px solid #ddd;
 }
 
-.template-dot:hover {
-    transform: scale(1.1);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
+.template-dot:hover { transform: scale(1.1); }
 .template-dot.active {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-primary);
-    border-color: transparent;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #3c4fe0;
 }
 
 .filter-options {
@@ -198,43 +150,36 @@
     border-radius: 8px;
     color: #636e72;
     font-weight: 500;
-    transition: all 0.2s;
-}
-
-.filter-options button:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
 }
 
 .filter-options button.active {
-    background: var(--color-primary);
+    background: #3c4fe0;
     color: white;
-    border-color: var(--color-primary);
+    border-color: #3c4fe0;
 }
 
 .action-buttons {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-top: 1rem;
 }
 
 .download-btn {
-    background: var(--color-secondary);
+    background: #00b894;
     color: white;
-    padding: 1rem;
+    padding: 1.2rem;
     border-radius: 50px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+    box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2);
 }
 
-.download-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(78, 205, 196, 0.5);
+.download-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .retake-btn {
@@ -249,43 +194,11 @@
     gap: 0.5rem;
 }
 
-.retake-btn:hover {
-    background: #dfe4ea;
-}
-
-@media (max-width: 800px) {
-    .editor-layout {
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-    }
-}
-
-/* Session watermark */
-.session-watermark {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.6rem;
-    opacity: 0.4;
-    letter-spacing: 1px;
-    margin-top: 4px;
-}
-
-/* Saved state for download button */
-.download-btn.saved {
-    background: #00b894;
-    box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
-}
-
-/* Empty state */
 .result-empty {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.5rem;
     background: #dfe6e9;
-    color: #636e72;
-    font-size: 1.1rem;
-    font-weight: 600;
 }
