@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, RefreshCw, Palette, Image as ImageIcon, Upload, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
@@ -41,6 +41,13 @@ export default function Result() {
     const [downloading, setDownloading] = useState(false);
     const [uploaded, setUploaded] = useState(false);
     const stripRef = useRef(null);
+
+    // Sync template when context changes (user navigates back & picks another)
+    useEffect(() => {
+        if (selectedTemplate) {
+            setCurrentTemplate(normalizeTemplate(selectedTemplate));
+        }
+    }, [selectedTemplate]);
 
     // Guard: redirect if no images
     if (!capturedImages || capturedImages.length === 0) {

@@ -52,25 +52,29 @@ export default function StyleSelection() {
         setSelectedId(template.id);
         setSelectedTemplate(template);
 
-        // Create session in backend
-        setCreating(true);
-        try {
-            const res = await sessionAPI.createSession({
-                template_id: template.id,
-                layout_count: photoCount,
-                duration: 24,
-            });
-            setSession(res.data.session);
-            // Increment usage counter (fire and forget)
-            templatesAPI.incrementUsage(template.id).catch(() => {});
-            navigate('/booth');
-        } catch (err) {
-            console.error('Failed to create session:', err);
-            // Navigate anyway, session will be null — booth still works offline
-            navigate('/booth');
-        } finally {
-            setCreating(false);
+        const token = localStorage.getItem('token');
+
+        // Only create session if user is logged in (has token)
+        if (token) {
+            setCreating(true);
+            try {
+                const res = await sessionAPI.createSession({
+                    template_id: template.id,
+                    layout_count: photoCount,
+                    duration: 24,
+                });
+                setSession(res.data.session);
+                // Increment usage counter (fire and forget)
+                templatesAPI.incrementUsage(template.id).catch(() => {});
+            } catch (err) {
+                console.error('Failed to create session:', err);
+                // Navigate anyway — booth still works offline
+            } finally {
+                setCreating(false);
+            }
         }
+
+        navigate('/booth');
     };
 
     return (

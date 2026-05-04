@@ -50,13 +50,19 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle errors
+// ONLY redirect to login if we're in admin area (not user flow)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const isAdminRoute = window.location.pathname.startsWith('/admin');
+      if (isAdminRoute) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      // For user routes: just reject the promise silently
+      // StyleSelection already has a try/catch that navigates anyway
     }
     return Promise.reject(error);
   }
