@@ -1,29 +1,99 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const PhotoboothContext = createContext(null);
 
+const STORAGE_KEYS = {
+  PHOTO_COUNT: 'pb_photo_count',
+  SELECTED_TEMPLATE: 'pb_selected_template',
+  SESSION: 'pb_session',
+  CAPTURED_IMAGES: 'pb_captured_images'
+};
+
 /**
  * Global state for the photobooth user flow.
- * Persisted in context so pages can navigate freely without losing state.
+ * Persisted in localStorage to survive page refreshes.
  */
 export function PhotoboothProvider({ children }) {
-  // Step 1: Layout
-  const [photoCount, setPhotoCount] = useState(3);
+  // --- Initialization from LocalStorage ---
+  
+  const [photoCount, setPhotoCount] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.PHOTO_COUNT);
+    return saved ? parseInt(saved, 10) : 3;
+  });
 
-  // Step 2: Template (from DB)
-  const [selectedTemplate, setSelectedTemplate] = useState(null); // full Template object from API
+  const [selectedTemplate, setSelectedTemplate] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_TEMPLATE);
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  // Step 3: Session (from DB)
-  const [session, setSession] = useState(null); // { session_id, id, ... }
+  const [session, setSession] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SESSION);
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  // Step 4: Captured images (base64 data URLs)
-  const [capturedImages, setCapturedImages] = useState([]);
+  const [capturedImages, setCapturedImages] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.CAPTURED_IMAGES);
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // --- Persistence Side Effects ---
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PHOTO_COUNT, photoCount);
+  }, [photoCount]);
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_TEMPLATE, JSON.stringify(selectedTemplate));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_TEMPLATE);
+    }
+  }, [selectedTemplate]);
+
+  useEffect(() => {
+    if (session) {
+      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.SESSION);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    // Note: base64 images can be large. localStorage limit is ~5MB.
+    // We only persist if there are images, otherwise clear it.
+    if (capturedImages.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.CAPTURED_IMAGES, JSON.stringify(capturedImages));
+      } catch (e) {
+        console.warn('Failed to save images to localStorage (likely size limit):', e);
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CAPTURED_IMAGES);
+    }
+  }, [capturedImages]);
+
+  // --- Helper Methods ---
 
   const resetFlow = useCallback(() => {
     setPhotoCount(3);
     setSelectedTemplate(null);
     setSession(null);
     setCapturedImages([]);
+    
+    // Clear all storage
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
   }, []);
 
   return (
