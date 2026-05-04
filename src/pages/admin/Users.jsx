@@ -386,6 +386,8 @@ const Users = () => {
           </div>
         </div>
       )}
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         isOpen={deleteDialogOpen}
