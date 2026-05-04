@@ -161,16 +161,45 @@ const TemplateCreate = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         setBackgroundPreview(event.target.result);
-        
-        // Auto-detect dimensions
+
+        // Auto-detect dimensions from the actual image
         const img = new Image();
         img.onload = () => {
+          const detectedW = img.naturalWidth;
+          const detectedH = img.naturalHeight;
+
+          // Update formData with real dimensions
           setFormData(prev => ({
             ...prev,
             background: file,
-            width: img.width,
-            height: img.height
+            width:  detectedW,
+            height: detectedH,
           }));
+
+          // Immediately regenerate zones using the REAL image dimensions
+          // (cannot rely on formData.width/height here — React state is async)
+          if (!isEditMode) {
+            setPhotoZones(prev => {
+              const count = formData.photo_count;
+              const zoneWidth  = Math.floor(detectedW * 0.8);
+              const zoneHeight = Math.floor((detectedH / count) * 0.7);
+              const marginX    = Math.floor(detectedW * 0.1);
+              const spacing    = Math.floor(detectedH / count);
+              return Array.from({ length: count }, (_, i) => ({
+                index: i,
+                x: marginX,
+                y: Math.floor(i * spacing + spacing * 0.15),
+                width:  zoneWidth,
+                height: zoneHeight,
+                rotation: 0,
+                z_index: i,
+                border:  { width: 5, color: '#ffffff', style: 'solid' },
+                effects: { shadow: true, rounded: 10, blur: 0, opacity: 1 },
+              }));
+            });
+          }
+
+          console.log(`✅ Image detected: ${detectedW}×${detectedH}px`);
         };
         img.src = event.target.result;
       };
