@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, RefreshCw, Palette, Image as ImageIcon, Check, Loader2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
@@ -17,16 +17,17 @@ const COLOR_PALETTE = [
 ];
 
 function normaliseTemplate(t) {
-    if (!t) return { id: null, name: 'Default', bgColor: '#ffffff', textColor: '#2d3436', bgImage: null, width: 1200, height: 1800, zones: [] };
+    if (!t) return { id: null, name: 'Default', bgColor: '#ffffff', textColor: '#2d3436', bgImage: null, width: 1200, height: 1800, zones: [], texts: [] };
     
     let zones = [];
-    if (t.photo_zones) {
-        try {
-            zones = typeof t.photo_zones === 'string' ? JSON.parse(t.photo_zones) : t.photo_zones;
-        } catch (e) {
-            console.error("Failed to parse zones", e);
-        }
-    }
+    try {
+        zones = typeof t.photo_zones === 'string' ? JSON.parse(t.photo_zones) : (t.photo_zones || []);
+    } catch (e) { console.error("Parse zones error", e); }
+
+    let texts = [];
+    try {
+        texts = typeof t.text_elements === 'string' ? JSON.parse(t.text_elements) : (t.text_elements || []);
+    } catch (e) { console.error("Parse texts error", e); }
 
     return {
         id:        t.id,
@@ -36,7 +37,8 @@ function normaliseTemplate(t) {
         bgImage:   t.background_url   || t.preview_url || t.thumbnail_url || null,
         width:     t.width || 1200,
         height:    t.height || 1800,
-        zones:     Array.isArray(zones) ? zones : []
+        zones:     Array.isArray(zones) ? zones : [],
+        texts:     Array.isArray(texts) ? texts : []
     };
 }
 
@@ -52,8 +54,10 @@ export default function Result() {
     const stripRef = useRef(null);
 
     useEffect(() => {
-        setTpl(normaliseTemplate(selectedTemplate));
-        setColorOverride(null);
+        if (selectedTemplate) {
+            setTpl(normaliseTemplate(selectedTemplate));
+            setColorOverride(null);
+        }
     }, [selectedTemplate]);
 
     const activeBg    = colorOverride?.bg    ?? tpl.bgColor;
@@ -73,15 +77,22 @@ export default function Result() {
         if (!stripRef.current) return;
         setDownloading(true);
         try {
-            const dataUrl = await toPng(stripRef.current, { cacheBust: true, pixelRatio: 2 });
+            // High quality capture
+            const dataUrl = await toPng(stripRef.current, { 
+                cacheBust: true, 
+                pixelRatio: 3, // Even higher for printing
+                style: {
+                    transform: 'scale(1)', // Ensure it captures at full size
+                }
+            });
             const a = document.createElement('a');
-            a.download = `memoria-${Date.now()}.png`;
+            a.download = `memoria-${tpl.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
             a.href = dataUrl;
             a.click();
             setSaved(true);
         } catch (err) {
             console.error('Download failed:', err);
-            alert('Gagal mengunduh. Coba lagi.');
+            alert('Gagal mengunduh. Pastikan semua gambar sudah dimuat.');
         } finally {
             setDownloading(false);
         }
@@ -91,7 +102,6 @@ export default function Result() {
         <div className="result-wrapper">
             <div className="editor-layout">
                 <div className="strip-preview-container">
-                    {/* The main canvas area that represents the actual template size */}
                     <div
                         className="photo-strip-canvas"
                         ref={stripRef}
@@ -105,17 +115,18 @@ export default function Result() {
                             overflow: 'hidden'
                         }}
                     >
-                        {/* Overlay if image exists */}
+                        {/* 1. Background Image Overlay (Subtle) */}
                         {activeBgImg && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.05)', pointerEvents: 'none', zIndex: 1 }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.02)', pointerEvents: 'none', zIndex: 1 }} />
                         )}
 
-                        {/* Rendering photos inside their defined zones */}
+                        {/* 2. Photo Zones (Synchronized with Admin) */}
                         {tpl.zones.map((zone, idx) => {
-                            const img = capturedImages[idx] || capturedImages[0]; // fallback to first image if index missing
+                            const img = capturedImages[idx] || capturedImages[0];
                             return (
                                 <div
-                                    key={idx}
+                                    key={`zone-${idx}`}
+                                    className="photo-zone-rendered"
                                     style={{
                                         position: 'absolute',
                                         left: `${zone.x}px`,
@@ -127,7 +138,7 @@ export default function Result() {
                                         overflow: 'hidden',
                                         border: zone.border ? `${zone.border.width}px ${zone.border.style} ${zone.border.color}` : 'none',
                                         borderRadius: zone.effects?.rounded ? `${zone.effects.rounded}px` : '0px',
-                                        boxShadow: zone.effects?.shadow ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+                                        boxShadow: zone.effects?.shadow ? '0 10px 30px rgba(0,0,0,0.2)' : 'none',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center'
@@ -137,59 +148,91 @@ export default function Result() {
                                         src={img}
                                         alt={`Capture ${idx + 1}`}
                                         className={`filter-${filter}`}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover'
-                                        }}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 </div>
                             );
                         })}
 
-                        {/* If no zones defined (fallback), use default vertical stack */}
-                        {tpl.zones.length === 0 && (
-                             <div className="strip-content-fallback" style={{ position: 'relative', zIndex: 3, padding: '40px', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
-                                <div className="branding" style={{ color: activeText, fontSize: '48px', fontWeight: 900, marginBottom: '20px' }}>MEMORIA</div>
-                                {capturedImages.map((img, idx) => (
-                                    <div key={idx} style={{ width: '80%', aspectRatio: '3/2', overflow: 'hidden', border: `10px solid ${activeText === '#ffffff' ? '#ffffff' : '#f0f0f0'}` }}>
-                                        <img src={img} className={`filter-${filter}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    </div>
-                                ))}
+                        {/* 3. Text Elements (Synchronized with Admin) */}
+                        {tpl.texts.map((text, idx) => (
+                            <div
+                                key={`text-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: `${text.x}px`,
+                                    top: `${text.y}px`,
+                                    transform: 'translate(-50%, -50%)',
+                                    zIndex: 10,
+                                    color: text.font?.color || activeText,
+                                    fontSize: `${text.font?.size || 40}px`,
+                                    fontWeight: text.font?.weight || 'bold',
+                                    fontFamily: text.font?.family || 'inherit',
+                                    textAlign: text.align || 'center',
+                                    pointerEvents: 'none',
+                                    width: text.max_width ? `${text.max_width}px` : 'auto'
+                                }}
+                            >
+                                {text.content === '{{date}}' 
+                                    ? new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                                    : text.content}
+                            </div>
+                        ))}
+
+                        {/* 4. Fallback Branding (if no text elements exist) */}
+                        {tpl.texts.length === 0 && (
+                             <div className="fallback-meta" style={{ position: 'absolute', bottom: '40px', width: '100%', textAlign: 'center', zIndex: 11, color: activeText }}>
+                                <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px' }}>MEMORIA</div>
+                                <div style={{ fontSize: '14px', opacity: 0.7, marginTop: '8px' }}>
+                                    {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </div>
                              </div>
                         )}
                     </div>
 
-                    <div className="template-name-badge">{tpl.name} ({tpl.width}x{tpl.height})</div>
+                    <div className="template-name-badge">
+                        <span>{tpl.name}</span>
+                        <span className="res-badge">{tpl.width} x {tpl.height} PX</span>
+                    </div>
                 </div>
 
                 <div className="tools-panel">
-                    <h2>Customize Strip</h2>
+                    <div className="tools-header">
+                        <h2>Customize Strip</h2>
+                        <p>Sesuaikan tampilan akhir fotomu</p>
+                    </div>
+
                     <div className="tool-section">
-                        <label><Palette size={18} /> Change Background</label>
-                        {colorOverride && (
-                            <button className="restore-btn" onClick={() => setColorOverride(null)}>
-                                ↩ Kembalikan Template Asli
-                            </button>
-                        )}
+                        <label><Palette size={18} /> Warna Background</label>
                         <div className="template-picker">
                             {COLOR_PALETTE.map((c) => (
                                 <button
                                     key={c.id}
                                     className={`template-dot ${colorOverride?.id === c.id ? 'active' : ''}`}
-                                    style={{ background: c.bg, border: '2px solid #ccc' }}
+                                    style={{ background: c.bg }}
                                     onClick={() => setColorOverride(c)}
+                                    title={c.label}
                                 />
                             ))}
                         </div>
+                        {colorOverride && (
+                            <button className="restore-btn" onClick={() => setColorOverride(null)}>
+                                ↩ Gunakan Desain Asli Template
+                            </button>
+                        )}
                     </div>
 
                     <div className="tool-section">
-                        <label><ImageIcon size={18} /> Photo Filter</label>
+                        <label><ImageIcon size={18} /> Efek Filter</label>
                         <div className="filter-options">
-                            {['none', 'bw', 'sepia', 'vivid'].map((f) => (
-                                <button key={f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>
-                                    {f === 'none' ? 'Normal' : f.charAt(0).toUpperCase() + f.slice(1)}
+                            {[
+                                { id: 'none',  label: 'Normal' },
+                                { id: 'bw',    label: 'B&W' },
+                                { id: 'sepia', label: 'Sepia' },
+                                { id: 'vivid', label: 'Vivid' }
+                            ].map((f) => (
+                                <button key={f.id} className={filter === f.id ? 'active' : ''} onClick={() => setFilter(f.id)}>
+                                    {f.label}
                                 </button>
                             ))}
                         </div>
@@ -197,11 +240,15 @@ export default function Result() {
 
                     <div className="action-buttons">
                         <button className="retake-btn" onClick={() => { resetFlow(); navigate('/'); }}>
-                            <RefreshCw size={18} /> Retake
+                            <RefreshCw size={18} /> Ulangi Foto
                         </button>
-                        <button className={`download-btn ${saved ? 'saved' : ''}`} onClick={downloadStrip} disabled={downloading}>
+                        <button 
+                            className={`download-btn ${saved ? 'saved' : ''}`} 
+                            onClick={downloadStrip} 
+                            disabled={downloading}
+                        >
                             {downloading ? <Loader2 size={18} className="spin" /> : saved ? <Check size={18} /> : <Download size={18} />}
-                            {downloading ? ' Menyimpan...' : saved ? ' Tersimpan!' : ' Download Strip'}
+                            <span>{downloading ? 'Menyimpan...' : saved ? 'Tersimpan!' : 'Download Strip'}</span>
                         </button>
                     </div>
                 </div>
