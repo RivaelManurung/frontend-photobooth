@@ -7,12 +7,16 @@ import { useToast } from '../../components/ui/Toast';
 import { formatDateTime } from '../../lib/utils';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const Templates = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchTemplates();
@@ -30,11 +34,17 @@ const Templates = () => {
     }
   };
 
-  const handleDelete = async (templateId) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+  const handleDeleteClick = (template) => {
+    setTemplateToDelete(template);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!templateToDelete) return;
     
     try {
-      await adminAPI.deleteTemplate(templateId);
+      setIsDeleting(true);
+      await adminAPI.deleteTemplate(templateToDelete.id);
       addToast({
         title: 'Success',
         description: 'Template deleted successfully',
@@ -48,6 +58,10 @@ const Templates = () => {
         description: 'Failed to delete template',
         variant: 'error'
       });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setTemplateToDelete(null);
     }
   };
 
@@ -238,7 +252,7 @@ const Templates = () => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => handleDelete(template.id)}
+                    onClick={() => handleDeleteClick(template)}
                     title="Delete"
                   >
                     <Trash2 className="h-3 w-3 text-destructive" />
@@ -262,6 +276,15 @@ const Templates = () => {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title="Hapus Template"
+        description={`Apakah Anda yakin ingin menghapus template "${templateToDelete?.name}"? Tindakan ini akan menghapus semua data terkait template ini.`}
+      />
     </div>
   );
 };

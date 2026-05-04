@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/Avatar';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { cn } from '../../lib/utils';
 
 const Users = () => {
@@ -21,6 +22,9 @@ const Users = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -83,11 +87,17 @@ const Users = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
     
     try {
-      await adminAPI.deleteUser(userId);
+      setIsDeleting(true);
+      await adminAPI.deleteUser(userToDelete.id);
       addToast({
         title: 'Success',
         description: 'User deleted successfully',
@@ -101,6 +111,10 @@ const Users = () => {
         description: 'Failed to delete user',
         variant: 'error'
       });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
     }
   };
 
@@ -334,7 +348,7 @@ const Users = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => handleDeleteClick(user)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -347,33 +361,40 @@ const Users = () => {
           </div>
           
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between p-4">
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between p-4">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title="Hapus Pengguna"
+        description={`Apakah Anda yakin ingin menghapus pengguna "${userToDelete?.name}"? Seluruh data terkait pengguna ini akan dihapus permanen.`}
+      />
     </div>
   );
 };

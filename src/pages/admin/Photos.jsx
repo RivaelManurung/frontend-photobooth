@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const Photos = () => {
   const { addToast } = useToast();
@@ -20,6 +21,9 @@ const Photos = () => {
     today: 0,
     favorites: 0,
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchPhotos();
@@ -56,11 +60,17 @@ const Photos = () => {
     }
   };
 
-  const handleDeletePhoto = async (photoId) => {
-    if (!confirm('Are you sure you want to delete this photo?')) return;
+  const handleDeleteClick = (photo) => {
+    setPhotoToDelete(photo);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!photoToDelete) return;
     
     try {
-      // await adminAPI.deletePhoto(photoId);
+      setIsDeleting(true);
+      // await adminAPI.deletePhoto(photoToDelete.id);
       addToast({
         title: 'Success',
         description: 'Photo deleted successfully',
@@ -74,6 +84,10 @@ const Photos = () => {
         description: 'Failed to delete photo',
         variant: 'error'
       });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setPhotoToDelete(null);
     }
   };
 
@@ -208,7 +222,7 @@ const Photos = () => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => handleDeletePhoto(photo.id)}
+                    onClick={() => handleDeleteClick(photo)}
                   >
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
@@ -227,6 +241,15 @@ const Photos = () => {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title="Hapus Foto"
+        description="Apakah Anda yakin ingin menghapus foto ini? Foto yang dihapus tidak dapat dikembalikan."
+      />
     </div>
   );
 };
