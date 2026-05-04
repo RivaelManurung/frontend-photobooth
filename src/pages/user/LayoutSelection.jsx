@@ -1,19 +1,25 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { usePhotobooth } from '../../context/PhotoboothContext';
 import '../../styles/SelectionScreens.css';
 
-export default function LayoutSelection({ onSelect }) {
+const layouts = [
+    { id: 2, name: 'CLASSIC', count: 2 },
+    { id: 3, name: 'TIMELINE', count: 3 },
+    { id: 4, name: 'STORY', count: 4 },
+];
+
+export default function LayoutSelection() {
     const navigate = useNavigate();
-    
-    const layouts = [
-        { id: 2, name: 'CLASSIC', count: 2 },
-        { id: 3, name: 'TIMELINE', count: 3 },
-        { id: 4, name: 'STORY', count: 4 },
-    ];
+    const { setPhotoCount, setSelectedTemplate, setSession, setCapturedImages } = usePhotobooth();
 
     const handleSelect = (count) => {
-        onSelect(count);
+        // Reset downstream state when layout changes
+        setPhotoCount(count);
+        setSelectedTemplate(null);
+        setSession(null);
+        setCapturedImages([]);
         navigate('/style');
     };
 

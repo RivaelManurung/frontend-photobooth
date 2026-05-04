@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, X, RotateCcw } from 'lucide-react';
+import { usePhotobooth } from '../../context/PhotoboothContext';
 import '../../styles/PhotoBooth.css';
 
 const COUNTDOWN_TIME = 3;
 
-export default function PhotoBooth({ photoCount = 3, onComplete }) {
+export default function PhotoBooth() {
     const navigate = useNavigate();
+    const { photoCount, setCapturedImages } = usePhotobooth();
+
     const [stream, setStream] = useState(null);
     const [capturing, setCapturing] = useState(false);
     const [countdown, setCountdown] = useState(null);
@@ -19,6 +22,7 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
     useEffect(() => {
         startCamera();
         return () => stopCamera();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const startCamera = async () => {
@@ -27,21 +31,21 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
                 video: {
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
-                    facingMode: "user"
-                }
+                    facingMode: 'user',
+                },
             });
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
             }
         } catch (err) {
-            console.error("Error accessing camera:", err);
+            console.error('Error accessing camera:', err);
         }
     };
 
     const stopCamera = () => {
         if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach((track) => track.stop());
             setStream(null);
         }
     };
@@ -56,13 +60,13 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
+            // Mirror the image (selfie mode)
             context.translate(canvas.width, 0);
             context.scale(-1, 1);
-
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const imageUrl = canvas.toDataURL('image/png');
-            setCapturedPhotos(prev => [...prev, imageUrl]);
+            setCapturedPhotos((prev) => [...prev, imageUrl]);
             return imageUrl;
         }
         return null;
@@ -84,19 +88,21 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
                         clearInterval(timer);
                         setCountdown(null);
                         const img = captureImage();
-                        newPhotos.push(img);
+                        if (img) newPhotos.push(img);
                         resolve();
                     }
                 }, 1000);
             });
 
+            // Small pause between shots
             if (i < photoCount - 1) {
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise((r) => setTimeout(r, 1000));
             }
         }
 
         setCapturing(false);
-        onComplete(newPhotos);
+        // Store captured images in global context → Result page reads from context
+        setCapturedImages(newPhotos);
         navigate('/result');
     };
 
@@ -108,6 +114,16 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
     return (
         <div className="booth-container">
             {flash && <div className="flash-overlay" />}
+
+            {/* Photo counter */}
+            <div className="photo-counter">
+                {[...Array(photoCount)].map((_, i) => (
+                    <div
+                        key={i}
+                        className={`counter-dot ${i < capturedPhotos.length ? 'filled' : ''}`}
+                    />
+                ))}
+            </div>
 
             <div className="camera-frame">
                 <video
@@ -129,7 +145,7 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
             <div className="controls">
                 {!capturing && (
                     <>
-                        <button className="control-btn cancel" onClick={() => navigate('/')}>
+                        <button className="control-btn cancel" onClick={() => navigate('/style')}>
                             <X size={24} />
                         </button>
                         <button className="shutter-btn" onClick={startSession}>
@@ -140,7 +156,11 @@ export default function PhotoBooth({ photoCount = 3, onComplete }) {
                         </button>
                     </>
                 )}
-                {capturing && <p className="status-text">Pose!</p>}
+                {capturing && (
+                    <p className="status-text">
+                        Foto {capturedPhotos.length + 1} dari {photoCount} — Pose! 📸
+                    </p>
+                )}
             </div>
         </div>
     );

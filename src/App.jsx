@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './components/ui/Toast';
+import { PhotoboothProvider } from './context/PhotoboothContext';
 
 // Layouts
 import AdminLayout from './components/layout/AdminLayout';
@@ -31,33 +32,24 @@ import Login from './pages/Login';
 const ProtectedAdminRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
 
-  if (user.role !== 'admin') {
-    return <Navigate to="/" replace />;
-  }
-
+  if (!token) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 };
 
-// User Route Wrapper (for user flow state management)
-import { useState } from 'react';
-
+/**
+ * User-facing photobooth flow.
+ * State is managed via PhotoboothContext — no prop drilling needed.
+ */
 function UserFlow() {
-  const [capturedImages, setCapturedImages] = useState([]);
-  const [photoCount, setPhotoCount] = useState(3);
-  const [selectedStyle, setSelectedStyle] = useState(null);
-
   return (
     <Routes>
-      <Route path="/" element={<Landing recentPhotos={capturedImages} />} />
-      <Route path="/layout" element={<LayoutSelection onSelect={(count) => setPhotoCount(count)} />} />
-      <Route path="/style" element={<StyleSelection layoutCount={photoCount} onSelect={(style) => setSelectedStyle(style)} />} />
-      <Route path="/booth" element={<PhotoBooth photoCount={photoCount} onComplete={(images) => setCapturedImages(images)} />} />
-      <Route path="/result" element={<Result images={capturedImages} selectedTemplate={selectedStyle} />} />
+      <Route path="/"        element={<Landing />} />
+      <Route path="/layout"  element={<LayoutSelection />} />
+      <Route path="/style"   element={<StyleSelection />} />
+      <Route path="/booth"   element={<PhotoBooth />} />
+      <Route path="/result"  element={<Result />} />
       <Route path="/gallery" element={<Gallery />} />
       <Route path="/features" element={<Features />} />
     </Routes>
@@ -67,36 +59,38 @@ function UserFlow() {
 function App() {
   return (
     <ToastProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Login Route */}
-          <Route path="/login" element={<Login />} />
-          
-          {/* Admin Routes */}
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedAdminRoute>
-                <AdminLayout />
-              </ProtectedAdminRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="photos" element={<Photos />} />
-            <Route path="templates" element={<Templates />} />
-            <Route path="templates/create" element={<TemplateCreate />} />
-            <Route path="templates/edit/:id" element={<TemplateCreate />} />
-            <Route path="payments" element={<Payments />} />
-            <Route path="promos" element={<Promos />} />
-            <Route path="sessions" element={<Sessions />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
+      <PhotoboothProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Login */}
+            <Route path="/login" element={<Login />} />
 
-          {/* User Routes */}
-          <Route path="/*" element={<UserFlow />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Admin Routes */}
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedAdminRoute>
+                  <AdminLayout />
+                </ProtectedAdminRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="photos" element={<Photos />} />
+              <Route path="templates" element={<Templates />} />
+              <Route path="templates/create" element={<TemplateCreate />} />
+              <Route path="templates/edit/:id" element={<TemplateCreate />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="promos" element={<Promos />} />
+              <Route path="sessions" element={<Sessions />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+
+            {/* User Routes */}
+            <Route path="/*" element={<UserFlow />} />
+          </Routes>
+        </BrowserRouter>
+      </PhotoboothProvider>
     </ToastProvider>
   );
 }

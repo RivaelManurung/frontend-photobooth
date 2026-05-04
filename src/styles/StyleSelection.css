@@ -1,0 +1,101 @@
+/* StyleSelection.css - extra styles for DB-connected template picker */
+
+/* Loading state */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 4rem;
+    color: #636e72;
+    font-weight: 600;
+}
+
+/* Overlay while creating session */
+.creating-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+/* Spin animation */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Error banner */
+.error-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff5f5;
+    border: 2px solid #fc8181;
+    color: #c53030;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Selected card highlight */
+.style-card.selected {
+    border-color: var(--color-primary, #e17055);
+    box-shadow: 8px 8px 0 var(--color-primary, #e17055);
+    transform: translateY(-5px);
+}
+
+/* Premium badge */
+.premium-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    letter-spacing: 0.5px;
+    z-index: 5;
+}
+
+/* Position relative on card for badge */
+.style-card {
+    position: relative;
+}
+
+/* DB template thumbnail */
+.template-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Category label under template name */
+.style-category {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #b2bec3;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
