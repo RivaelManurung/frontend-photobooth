@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, RefreshCw, Palette, Image as ImageIcon, Check, Loader2 } from 'lucide-react';
+import { Download, RefreshCw, Palette, Image as ImageIcon, Check, Loader2, Cloud } from 'lucide-react';
+import { photoAPI } from '../../lib/api';
 import { toPng } from 'html-to-image';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import '../../styles/ResultPage.css';
@@ -51,6 +52,8 @@ export default function Result() {
     const [filter,      setFilter]      = useState('none');
     const [downloading, setDownloading] = useState(false);
     const [saved,       setSaved]       = useState(false);
+    const [cloudUrl,    setCloudUrl]    = useState(null);
+    const [uploading,   setUploading]   = useState(false);
     const stripRef = useRef(null);
 
     useEffect(() => {
@@ -77,19 +80,33 @@ export default function Result() {
         if (!stripRef.current) return;
         setDownloading(true);
         try {
-            // High quality capture
+            // 1. Render at full resolution
             const dataUrl = await toPng(stripRef.current, { 
                 cacheBust: true, 
-                pixelRatio: 3, // Even higher for printing
-                style: {
-                    transform: 'scale(1)', // Ensure it captures at full size
-                }
+                pixelRatio: 3,
             });
+
+            // 2. Trigger local browser download
             const a = document.createElement('a');
             a.download = `memoria-${tpl.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
             a.href = dataUrl;
             a.click();
             setSaved(true);
+
+            // 3. Upload to Supabase in background (fire and forget UI feedback)
+            setUploading(true);
+            try {
+                const res = await photoAPI.uploadPublicStrip({
+                    image_base64: dataUrl,
+                    template_id: tpl.id || 0,
+                    filter: filter,
+                });
+                setCloudUrl(res.data.url);
+            } catch (uploadErr) {
+                console.warn('Cloud upload failed (non-critical):', uploadErr);
+            } finally {
+                setUploading(false);
+            }
         } catch (err) {
             console.error('Download failed:', err);
             alert('Gagal mengunduh. Pastikan semua gambar sudah dimuat.');
@@ -250,6 +267,20 @@ export default function Result() {
                             {downloading ? <Loader2 size={18} className="spin" /> : saved ? <Check size={18} /> : <Download size={18} />}
                             <span>{downloading ? 'Menyimpan...' : saved ? 'Tersimpan!' : 'Download Strip'}</span>
                         </button>
+
+                        {/* Cloud upload status */}
+                        {saved && (
+                            <div className="cloud-status">
+                                <Cloud size={14} />
+                                {uploading ? (
+                                    <span>Menyimpan ke Cloud...</span>
+                                ) : cloudUrl ? (
+                                    <span>✅ Tersimpan di Cloud</span>
+                                ) : (
+                                    <span style={{ color: '#b2bec3' }}>Cloud upload gagal (tidak kritis)</span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

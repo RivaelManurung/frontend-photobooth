@@ -127,6 +127,8 @@ export const photoAPI = {
   getPhotos: (params) => api.get('/photos', { params }),
   getPhoto: (id) => api.get(`/photos/${id}`),
   deletePhoto: (id) => api.delete(`/photos/${id}`),
+  // Upload the final rendered strip (base64 PNG) — no auth needed
+  uploadPublicStrip: (data) => api.post('/photos/strip-public', data),
 };
 
 // Template APIs
