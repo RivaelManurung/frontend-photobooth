@@ -72,6 +72,11 @@ function drawCover(ctx, img, x, y, w, h) {
 // ── Core render function — draws everything onto a <canvas> ──────────────
 async function renderToCanvas(canvas, tpl, images, bgColor, bgImage, filter, textColor) {
   const { width, height, zones, texts } = tpl;
+
+  // DEBUG: log zone coordinates to verify they match admin template
+  console.log('🎨 Rendering canvas:', { width, height, zoneCount: zones.length });
+  zones.forEach((z, i) => console.log(`  Zone ${i}:`, { x: z.x, y: z.y, w: z.width, h: z.height }));
+
   canvas.width  = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
