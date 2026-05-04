@@ -1,4 +1,4 @@
-/* ResultPage specific styles not covered by Templates.css */
+/* ─── Result Page ──────────────────────────────────────────────── */
 
 .result-wrapper {
     min-height: 100vh;
@@ -6,137 +6,159 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #dfe6e9;
+    background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
     padding: 2rem;
+    box-sizing: border-box;
 }
 
 .editor-layout {
     display: flex;
-    gap: 4rem;
+    gap: 3rem;
     align-items: flex-start;
     flex-wrap: wrap;
     justify-content: center;
+    max-width: 1100px;
+    width: 100%;
 }
 
+/* ─── Strip preview area ─────────────────────────────────────── */
 .strip-preview-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-    perspective: 1000px;
-    /* We use a fixed width for the container and scale the large canvas inside it */
-    width: 360px; 
+    gap: 1rem;
 }
 
-/* High-res canvas scaled down for UI preview */
-.photo-strip-canvas {
-    transform-origin: top center;
-    /* This formula scales a large canvas (e.g. 1200px) down to fit a smaller container (e.g. 320px) */
-    /* We'll handle the actual scale factor in a wrapper or via dynamic style if needed, 
-       but for now we'll use a fixed width and let object-fit/transform handle it in JSX or just set scale */
-    scale: 0.28; /* Approx 340/1200 */
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.3);
-    margin-bottom: -1200px; /* Offset the space taken by original size */
+/*
+ * The "viewport" is the visible preview box.
+ * It clips the oversized inner canvas.
+ */
+.strip-viewport {
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.30);
+    border-radius: 4px;
 }
 
-/* Container to handle the scaled preview cleanly */
-.strip-preview-container {
-    height: auto;
-    overflow: visible;
+/*
+ * The actual canvas renders at the template's native resolution.
+ * CSS transform:scale() shrinks it visually while layout stays at native size.
+ * html-to-image therefore captures the full-resolution element.
+ */
+.strip-canvas-inner {
+    /* width/height/transform are set inline via React */
+    will-change: transform;
 }
 
-/* Wrapper to prevent layout jump from scaled element */
-.photo-strip-canvas {
-    zoom: 0.28; /* Cleaner than transform for layout */
-    -moz-transform: scale(0.28);
-    -moz-transform-origin: top center;
-}
+/* ─── Filters ────────────────────────────────────────────────── */
+.filter-bw    { filter: grayscale(100%); }
+.filter-sepia { filter: sepia(0.85) contrast(1.15) brightness(0.95); }
+.filter-vivid { filter: saturate(1.6) contrast(1.1) brightness(1.05); }
+.filter-none  { filter: none; }
 
+/* ─── Template name badge ────────────────────────────────────── */
 .template-name-badge {
-    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
     font-weight: 700;
     color: #636e72;
     letter-spacing: 1px;
     text-transform: uppercase;
-    background: rgba(255,255,255,0.8);
-    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 5px 14px;
     border-radius: 20px;
-    backdrop-filter: blur(4px);
-    margin-top: 1rem;
-    z-index: 10;
+    backdrop-filter: blur(6px);
 }
 
-.restore-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: #f0f4ff;
-    color: #3c4fe0;
-    border: 1.5px dashed #3c4fe0;
-    border-radius: 8px;
-    padding: 0.45rem 0.9rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 0.8rem;
-    transition: all 0.2s;
-}
-.restore-btn:hover {
-    background: #3c4fe0;
-    color: white;
+.res-badge {
+    color: #b2bec3;
+    font-weight: 400;
 }
 
-/* Filters */
-.filter-bw { filter: grayscale(100%); }
-.filter-sepia { filter: sepia(0.8) contrast(1.2); }
-.filter-vivid { filter: saturate(1.5) contrast(1.1); }
-.filter-none { filter: none; }
-
-/* Tools Panel */
+/* ─── Tools panel ────────────────────────────────────────────── */
 .tools-panel {
-    background: white;
+    background: #fff;
     padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    width: 350px;
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.10);
+    width: 340px;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.75rem;
+    flex-shrink: 0;
 }
 
-.tools-panel h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+.tools-header h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem;
+    color: #2d3436;
+}
+
+.tools-header p {
+    font-size: 0.85rem;
+    color: #b2bec3;
+    margin: 0;
 }
 
 .tool-section label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
     color: #636e72;
+    margin-bottom: 0.85rem;
+    letter-spacing: 0.3px;
 }
 
+/* ─── Colour palette dots ────────────────────────────────────── */
 .template-picker {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.8rem;
+    gap: 0.7rem;
 }
 
 .template-dot {
-    width: 45px;
-    height: 45px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     cursor: pointer;
-    transition: transform 0.2s;
+    border: 2.5px solid rgba(0,0,0,0.08);
+    transition: transform 0.18s, box-shadow 0.18s;
 }
 
-.template-dot:hover { transform: scale(1.1); }
+.template-dot:hover {
+    transform: scale(1.12);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
 .template-dot.active {
-    box-shadow: 0 0 0 2px white, 0 0 0 4px #3c4fe0;
+    transform: scale(1.12);
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #3c4fe0;
 }
 
+/* ─── Restore button ─────────────────────────────────────────── */
+.restore-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #eef0ff;
+    color: #3c4fe0;
+    border: 1.5px dashed #3c4fe0;
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s;
+}
+.restore-btn:hover { background: #3c4fe0; color: #fff; }
+
+/* ─── Filter buttons ─────────────────────────────────────────── */
 .filter-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -144,74 +166,125 @@
 }
 
 .filter-options button {
-    padding: 0.8rem;
-    border: 1px solid #dfe6e9;
-    background: white;
-    border-radius: 8px;
+    padding: 0.75rem;
+    border: 1.5px solid #dfe6e9;
+    background: #fff;
+    border-radius: 10px;
     color: #636e72;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.filter-options button:hover {
+    border-color: #3c4fe0;
+    color: #3c4fe0;
 }
 
 .filter-options button.active {
     background: #3c4fe0;
-    color: white;
+    color: #fff;
     border-color: #3c4fe0;
 }
 
+/* ─── Action buttons ─────────────────────────────────────────── */
 .action-buttons {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.85rem;
 }
 
-.download-btn {
-    background: #00b894;
-    color: white;
-    padding: 1.2rem;
-    border-radius: 50px;
-    font-weight: 700;
+.retake-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2);
-}
-
-.download-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.retake-btn {
     background: #f1f2f6;
     color: #747d8c;
     padding: 1rem;
     border-radius: 50px;
     font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+.retake-btn:hover { background: #dfe4ea; }
+
+.download-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+    background: #00b894;
+    color: #fff;
+    padding: 1.1rem;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 8px 20px rgba(0, 184, 148, 0.28);
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.download-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 184, 148, 0.38);
+}
+.download-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+.download-btn.saved {
+    background: #0984e3;
+    box-shadow: 0 8px 20px rgba(9, 132, 227, 0.28);
 }
 
+/* ─── Cloud upload status ────────────────────────────────────── */
+.cloud-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: #00b894;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: rgba(0, 184, 148, 0.08);
+    border: 1px solid rgba(0, 184, 148, 0.22);
+}
+
+/* ─── Spin animation ─────────────────────────────────────────── */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+.spin { animation: spin 0.9s linear infinite; }
+
+/* ─── Empty state ────────────────────────────────────────────── */
 .result-empty {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 1.5rem;
     background: #dfe6e9;
+    color: #636e72;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
-.cloud-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.78rem;
-    color: #00b894;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
-    background: rgba(0, 184, 148, 0.08);
-    border: 1px solid rgba(0, 184, 148, 0.2);
-    justify-content: center;
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 800px) {
+    .editor-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+    .tools-panel {
+        width: 100%;
+        max-width: 400px;
+    }
 }
