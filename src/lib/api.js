@@ -1,7 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
-const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8080';
+const isProd = import.meta.env.PROD;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+// Fallback logic for production vs development
+const API_BASE_URL = VITE_API_URL || (isProd ? '/api/v1' : 'http://localhost:8080/api/v1');
+const BACKEND_URL = API_BASE_URL.replace('/api/v1', '');
+
+if (isProd && !VITE_API_URL) {
+  console.warn('⚠️ VITE_API_URL is not defined in production. API calls might fail if not proxied.');
+}
 
 // Helper to convert relative URLs to absolute URLs
 export const getImageUrl = (url) => {
