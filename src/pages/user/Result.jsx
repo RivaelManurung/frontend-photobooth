@@ -45,13 +45,17 @@ function parseTpl(t) {
 function loadImg(src) {
   return new Promise((res, rej) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // data: URLs must NOT have crossOrigin set — it breaks loading in canvas
+    const isData = src.startsWith('data:');
+    if (!isData) img.crossOrigin = 'anonymous';
     img.onload = () => res(img);
-    img.onerror = () => {                   // retry without crossOrigin
+    img.onerror = () => {
+      if (isData) { rej(new Error('data URL load failed')); return; }
+      // Retry external URL without crossOrigin (will taint canvas but still shows)
       const i2 = new Image();
       i2.onload = () => res(i2);
       i2.onerror = rej;
-      i2.src = src + (src.includes('?') ? '&' : '?') + '_nc=' + Date.now();
+      i2.src = src;
     };
     img.src = src;
   });
@@ -60,7 +64,9 @@ function loadImg(src) {
 function drawCover(ctx, img, x, y, w, h) {
   const s  = Math.max(w / img.width, h / img.height);
   const sw = w / s, sh = h / s;
-  ctx.drawImage(img, (img.width-sw)/2, (img.height-sh)/2, sw, sh, x, y, w, h);
+  const sx = (img.width  - sw) / 2;
+  const sy = (img.height - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
 // ── Core render function — draws everything onto a <canvas> ──────────────
@@ -91,37 +97,49 @@ async function renderToCanvas(canvas, tpl, images, bgColor, bgImage, filter, tex
       const z   = zones[i];
       const src = images[i] ?? images[0];
       if (!src) continue;
-      let photo; try { photo = await loadImg(src); } catch { continue; }
+
+      let photo;
+      try {
+        photo = await loadImg(src);
+      } catch(e) {
+        console.error(`Zone ${i} photo load failed:`, e);
+        continue;
+      }
 
       ctx.save();
 
-      // Clip
-      const r = z.effects?.rounded || 0;
+      const r  = z.effects?.rounded || 0;
+      const zx = z.x, zy = z.y, zw = z.width, zh = z.height;
+
+      // Clip to zone rectangle
       ctx.beginPath();
-      if (r > 0 && ctx.roundRect) ctx.roundRect(z.x, z.y, z.width, z.height, r);
-      else                         ctx.rect(z.x, z.y, z.width, z.height);
+      if (r > 0 && ctx.roundRect) ctx.roundRect(zx, zy, zw, zh, r);
+      else ctx.rect(zx, zy, zw, zh);
       ctx.clip();
 
-      // Filter + draw
+      // Apply filter
       if (f) ctx.filter = f;
+
       if (z.rotation) {
-        const cx = z.x + z.width/2, cy = z.y + z.height/2;
+        // Rotate around zone centre, draw at (0,0) after translating
+        const cx = zx + zw/2, cy = zy + zh/2;
         ctx.translate(cx, cy);
         ctx.rotate(z.rotation * Math.PI / 180);
-        ctx.translate(-z.width/2, -z.height/2);
-        drawCover(ctx, photo, 0, 0, z.width, z.height);
+        ctx.translate(-zw/2, -zh/2);
+        drawCover(ctx, photo, 0, 0, zw, zh);
       } else {
-        drawCover(ctx, photo, z.x, z.y, z.width, z.height);
+        // No rotation — draw directly at zone pixel coordinates
+        drawCover(ctx, photo, zx, zy, zw, zh);
       }
       ctx.filter = 'none';
 
-      // Border
+      // Draw border on top
       if (z.border?.width > 0) {
         ctx.strokeStyle = z.border.color || '#fff';
         ctx.lineWidth   = z.border.width;
         ctx.beginPath();
-        if (r > 0 && ctx.roundRect) ctx.roundRect(z.x, z.y, z.width, z.height, r);
-        else ctx.rect(z.x, z.y, z.width, z.height);
+        if (r > 0 && ctx.roundRect) ctx.roundRect(zx, zy, zw, zh, r);
+        else ctx.rect(zx, zy, zw, zh);
         ctx.stroke();
       }
       ctx.restore();
