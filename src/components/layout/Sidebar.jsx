@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { 
   LayoutDashboard, 
-  Users, 
   Image, 
   FileText, 
   CreditCard, 
@@ -12,7 +11,6 @@ import {
   Camera,
   ChevronDown,
   ChevronRight,
-  User,
   Bell,
   Key,
   Link2,
@@ -48,23 +46,6 @@ const Sidebar = () => {
       icon: LayoutDashboard, 
       label: 'Dashboard', 
       path: '/admin',
-      submenu: [
-        { label: 'Dashboard 1', path: '/admin' },
-        { label: 'Dashboard 2', path: '/admin/dashboard-2' },
-        { label: 'Dashboard 3', path: '/admin/dashboard-3' },
-      ]
-    },
-    { 
-      key: 'tasks',
-      icon: FileCode, 
-      label: 'Tasks', 
-      path: '/admin/tasks'
-    },
-    { 
-      key: 'users',
-      icon: Users, 
-      label: 'Users', 
-      path: '/admin/users'
     },
     {
       key: 'pages',
