@@ -158,9 +158,22 @@ const TemplateCreate = () => {
   const handleBackgroundUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData({ ...formData, background: file });
       const reader = new FileReader();
-      reader.onload = (event) => setBackgroundPreview(event.target.result);
+      reader.onload = (event) => {
+        setBackgroundPreview(event.target.result);
+        
+        // Auto-detect dimensions
+        const img = new Image();
+        img.onload = () => {
+          setFormData(prev => ({
+            ...prev,
+            background: file,
+            width: img.width,
+            height: img.height
+          }));
+        };
+        img.src = event.target.result;
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -296,10 +309,19 @@ const TemplateCreate = () => {
                 <Card>
                   <CardHeader><CardTitle>Preview & Zones</CardTitle></CardHeader>
                   <CardContent>
-                    <div ref={previewRef} className="relative border-2 border-dashed rounded-lg overflow-hidden bg-gray-50 aspect-[2/3]">
+                    <div 
+                      ref={previewRef} 
+                      className="relative border-2 border-dashed rounded-lg overflow-hidden bg-gray-50 mx-auto"
+                      style={{ 
+                        aspectRatio: `${formData.width} / ${formData.height}`,
+                        width: '100%',
+                        maxWidth: formData.width > formData.height ? '100%' : `${(formData.width / formData.height) * 80}vh`,
+                        maxHeight: '80vh'
+                      }}
+                    >
                       {backgroundPreview ? (
                         <>
-                          <img src={backgroundPreview} alt="Background" className="w-full" />
+                          <img src={backgroundPreview} alt="Background" className="w-full h-full object-contain" />
                           {photoZones.map((zone, index) => (
                             <DraggablePhotoZone key={index} zone={zone} index={index} onUpdate={updatePhotoZone} templateWidth={formData.width} templateHeight={formData.height} containerWidth={getContainerWidth()} />
                           ))}
