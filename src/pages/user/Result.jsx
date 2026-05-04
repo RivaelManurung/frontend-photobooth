@@ -69,34 +69,49 @@ function drawCover(ctx, img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// ── Core render function — draws everything onto a <canvas> ──────────────
+// ── Core render function ─────────────────────────────────────────────────
+// Returns {width, height} of the actual canvas rendered
 async function renderToCanvas(canvas, tpl, images, bgColor, bgImage, filter, textColor) {
-  const { width, height, zones, texts } = tpl;
-
-  // DEBUG: log zone coordinates to verify they match admin template
-  console.log('🎨 Rendering canvas:', { width, height, zoneCount: zones.length });
-  zones.forEach((z, i) => console.log(`  Zone ${i}:`, { x: z.x, y: z.y, w: z.width, h: z.height }));
-
-  canvas.width  = width;
-  canvas.height = height;
+  const { width: tplW, height: tplH, zones, texts } = tpl;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, width, height);
+  const f   = FILTER_MAP[filter] || '';
 
-  // 1. Solid background
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, width, height);
+  // Step 1: Load background image and get its NATURAL dimensions
+  let bgEl   = null;
+  let canvasW = tplW;
+  let canvasH = tplH;
 
-  // 2. Template background image
   if (bgImage) {
     try {
-      const bg = await loadImg(bgImage);
-      ctx.drawImage(bg, 0, 0, width, height);
-    } catch(e) { console.warn('BG load fail:', e); }
+      bgEl    = await loadImg(bgImage);
+      // Use the actual image size — NOT the stored template size
+      canvasW = bgEl.naturalWidth  || bgEl.width  || tplW;
+      canvasH = bgEl.naturalHeight || bgEl.height || tplH;
+      console.log(`🖼 BG image natural size: ${canvasW}×${canvasH} (template stored: ${tplW}×${tplH})`);
+    } catch(e) {
+      console.warn('BG image load failed:', e);
+    }
   }
 
-  const f = FILTER_MAP[filter] || '';
+  // Scale factors: convert zone coords from template space → image space
+  const scaleX = canvasW / tplW;
+  const scaleY = canvasH / tplH;
 
-  // 3. Photo zones (exact DB coordinates)
+  // Setup canvas at natural image size
+  canvas.width  = canvasW;
+  canvas.height = canvasH;
+  ctx.clearRect(0, 0, canvasW, canvasH);
+
+  // Fill background color
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // Draw background image at 1:1 (no distortion)
+  if (bgEl) {
+    ctx.drawImage(bgEl, 0, 0, canvasW, canvasH);
+  }
+
+  // Draw photo zones (coordinates scaled from template space to image space)
   if (zones.length > 0) {
     for (let i = 0; i < zones.length; i++) {
       const z   = zones[i];
@@ -104,44 +119,41 @@ async function renderToCanvas(canvas, tpl, images, bgColor, bgImage, filter, tex
       if (!src) continue;
 
       let photo;
-      try {
-        photo = await loadImg(src);
-      } catch(e) {
-        console.error(`Zone ${i} photo load failed:`, e);
-        continue;
-      }
+      try { photo = await loadImg(src); }
+      catch(e) { console.error(`Zone ${i} load failed:`, e); continue; }
+
+      // Scale zone rect to image space
+      const zx = z.x     * scaleX;
+      const zy = z.y     * scaleY;
+      const zw = z.width * scaleX;
+      const zh = z.height* scaleY;
+      const r  = (z.effects?.rounded || 0) * Math.min(scaleX, scaleY);
 
       ctx.save();
 
-      const r  = z.effects?.rounded || 0;
-      const zx = z.x, zy = z.y, zw = z.width, zh = z.height;
-
-      // Clip to zone rectangle
+      // Clip to zone
       ctx.beginPath();
       if (r > 0 && ctx.roundRect) ctx.roundRect(zx, zy, zw, zh, r);
       else ctx.rect(zx, zy, zw, zh);
       ctx.clip();
 
-      // Apply filter
       if (f) ctx.filter = f;
 
       if (z.rotation) {
-        // Rotate around zone centre, draw at (0,0) after translating
         const cx = zx + zw/2, cy = zy + zh/2;
         ctx.translate(cx, cy);
         ctx.rotate(z.rotation * Math.PI / 180);
         ctx.translate(-zw/2, -zh/2);
         drawCover(ctx, photo, 0, 0, zw, zh);
       } else {
-        // No rotation — draw directly at zone pixel coordinates
         drawCover(ctx, photo, zx, zy, zw, zh);
       }
       ctx.filter = 'none';
 
-      // Draw border on top
+      // Border
       if (z.border?.width > 0) {
         ctx.strokeStyle = z.border.color || '#fff';
-        ctx.lineWidth   = z.border.width;
+        ctx.lineWidth   = (z.border.width) * Math.min(scaleX, scaleY);
         ctx.beginPath();
         if (r > 0 && ctx.roundRect) ctx.roundRect(zx, zy, zw, zh, r);
         else ctx.rect(zx, zy, zw, zh);
@@ -151,47 +163,52 @@ async function renderToCanvas(canvas, tpl, images, bgColor, bgImage, filter, tex
     }
   } else {
     // Fallback: auto-stack
-    const px = width*0.08, pw = width*0.84;
-    const ph = (height*0.78) / images.length, gap = (height*0.22)/(images.length+1);
+    const px = canvasW*0.08, pw = canvasW*0.84;
+    const ph = (canvasH*0.78)/images.length, gap = (canvasH*0.22)/(images.length+1);
     for (let i = 0; i < images.length; i++) {
       let p; try { p = await loadImg(images[i]); } catch { continue; }
-      const y = gap*(i+1) + ph*i;
       if (f) ctx.filter = f;
-      drawCover(ctx, p, px, y, pw, ph);
+      drawCover(ctx, p, px, gap*(i+1)+ph*i, pw, ph);
       ctx.filter = 'none';
     }
     ctx.fillStyle = textColor;
-    ctx.font      = `900 ${Math.round(width*0.055)}px Arial`;
+    ctx.font = `900 ${Math.round(canvasW*0.055)}px Arial`;
     ctx.textAlign = 'center';
-    ctx.fillText('MEMORIA', width/2, height*0.04);
+    ctx.fillText('MEMORIA', canvasW/2, canvasH*0.04);
   }
 
-  // 4. Text elements
+  // Text elements (scaled to image space)
   for (const t of texts) {
     ctx.save();
-    ctx.font      = `${t.font?.weight||'bold'} ${t.font?.size||40}px ${t.font?.family||'Arial'}`;
+    ctx.font      = `${t.font?.weight||'bold'} ${(t.font?.size||40)*Math.min(scaleX,scaleY)}px ${t.font?.family||'Arial'}`;
     ctx.fillStyle = t.font?.color || textColor;
     ctx.textAlign = t.align || 'center';
     const content = t.content==='{{date}}'
       ? new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})
       : t.content;
-    ctx.fillText(content, t.x, t.y);
+    ctx.fillText(content, t.x * scaleX, t.y * scaleY);
     ctx.restore();
   }
+
+  // Return actual rendered dimensions
+  return { width: canvasW, height: canvasH };
 }
+
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function Result() {
   const navigate = useNavigate();
   const { capturedImages, selectedTemplate, resetFlow } = usePhotobooth();
 
-  const [tpl,      setTpl]      = useState(() => parseTpl(selectedTemplate));
-  const [override, setOverride] = useState(null);
-  const [filter,   setFilter]   = useState('none');
-  const [busy,     setBusy]     = useState(false);   // rendering
-  const [saved,    setSaved]    = useState(false);
-  const [cloud,    setCloud]    = useState(null);
-  const [uploading,setUploading]= useState(false);
+  const [tpl,        setTpl]        = useState(() => parseTpl(selectedTemplate));
+  const [override,   setOverride]   = useState(null);
+  const [filter,     setFilter]     = useState('none');
+  const [busy,       setBusy]       = useState(false);
+  const [saved,      setSaved]      = useState(false);
+  const [cloud,      setCloud]      = useState(null);
+  const [uploading,  setUploading]  = useState(false);
+  // Actual rendered dimensions (from bg image natural size)
+  const [rendered,   setRendered]   = useState({ w: tpl.width, h: tpl.height });
 
   const canvasRef  = useRef(null);
   const renderLock = useRef(false);
@@ -199,7 +216,8 @@ export default function Result() {
   const activeBg    = override?.bg   ?? tpl.bgColor;
   const activeText  = override?.text ?? tpl.textColor;
   const activeBgImg = override       ? null : tpl.bgImage;
-  const previewH    = Math.round(tpl.height * (PREVIEW_W / tpl.width));
+  // Use rendered dimensions for preview aspect ratio
+  const previewH    = Math.round(rendered.h * (PREVIEW_W / rendered.w));
 
   useEffect(() => {
     if (selectedTemplate) { setTpl(parseTpl(selectedTemplate)); setOverride(null); }
@@ -211,7 +229,8 @@ export default function Result() {
     renderLock.current = true;
     setBusy(true);
     try {
-      await renderToCanvas(canvasRef.current, tpl, capturedImages, activeBg, activeBgImg, filter, activeText);
+      const dims = await renderToCanvas(canvasRef.current, tpl, capturedImages, activeBg, activeBgImg, filter, activeText);
+      if (dims) setRendered({ w: dims.width, h: dims.height });
     } finally {
       setBusy(false);
       renderLock.current = false;
