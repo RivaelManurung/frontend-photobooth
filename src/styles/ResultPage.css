@@ -29,15 +29,22 @@
     gap: 1rem;
 }
 
-/*
- * The "viewport" is the visible preview box.
- * It clips the oversized inner canvas.
- */
 .strip-viewport {
     overflow: hidden;
     position: relative;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.30);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.28);
     border-radius: 4px;
+    background: #f0f0f0;
+}
+
+.canvas-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.55);
+    z-index: 10;
 }
 
 /*
