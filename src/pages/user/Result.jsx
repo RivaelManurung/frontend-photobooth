@@ -1,55 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, RefreshCw, Palette, Image as ImageIcon, Upload, Check } from 'lucide-react';
+import { Download, RefreshCw, Palette, Image as ImageIcon, Check, Loader2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import '../../styles/ResultPage.css';
-import '../../styles/Templates.css';
 
-// Local fallback templates (same as StyleSelection fallbacks)
-const LOCAL_FALLBACK_TEMPLATES = [
-    { id: 'local-1', name: 'CLASSIC WHITE', background_color: '#ffffff', text_color: '#2d3436', border_style: 'solid' },
-    { id: 'local-2', name: 'CHARCOAL', background_color: '#2d3436', text_color: 'rgba(255,255,255,0.8)' },
-    { id: 'local-3', name: 'VINTAGE FILM', className: 'theme-film', background_color: '#1a1a1a', text_color: '#ffffff' },
-    { id: 'local-4', name: 'POP ART LOVE', className: 'theme-pop', background_color: '#48dbfb', text_color: '#000' },
-    { id: 'local-5', name: 'GREEN PICNIC', className: 'theme-picnic', background_color: '#e3f2fd', text_color: '#2e7d32' },
-    { id: 'local-6', name: 'BIRTHDAY PARTY', className: 'theme-birthday', background_color: '#fff3cd', text_color: '#d35400' },
-    { id: 'local-7', name: 'SKA CHECKER', className: 'theme-checker', background_color: '#fff', text_color: '#000' },
-    { id: 'local-8', name: 'NEON NIGHTS', className: 'theme-neon', background_color: '#000', text_color: '#00ff00' },
+// ─── Colour palette for manual override ───────────────────────────────────────
+const COLOR_PALETTE = [
+    { id: 'c1', label: 'Classic White', bg: '#ffffff',   text: '#2d3436' },
+    { id: 'c2', label: 'Charcoal',      bg: '#2d3436',   text: '#ffffff' },
+    { id: 'c3', label: 'Rose Pink',     bg: '#ffb3c1',   text: '#5c0020' },
+    { id: 'c4', label: 'Mint',          bg: '#b2f5ea',   text: '#1a4a3a' },
+    { id: 'c5', label: 'Sky Blue',      bg: '#bde0fe',   text: '#023e8a' },
+    { id: 'c6', label: 'Cream',         bg: '#fff3cd',   text: '#7d4e00' },
+    { id: 'c7', label: 'Lavender',      bg: '#e9d8fd',   text: '#44337a' },
+    { id: 'c8', label: 'Neon Dark',     bg: '#0d0d0d',   text: '#39ff14' },
 ];
 
+/**
+ * Normalises a template object from DB or local fallback into a consistent shape.
+ */
+function normaliseTemplate(t) {
+    if (!t) return { id: null, name: 'Default', bgColor: '#ffffff', textColor: '#2d3436', bgImage: null };
+    return {
+        id:        t.id,
+        name:      t.name || 'Template',
+        bgColor:   t.background_color || t.background || '#ffffff',
+        textColor: t.text_color       || t.textColor  || '#2d3436',
+        bgImage:   t.background_url   || t.preview_url || t.thumbnail_url || null,
+    };
+}
+
 export default function Result() {
-    const navigate = useNavigate();
+    const navigate  = useNavigate();
     const { capturedImages, selectedTemplate, session, resetFlow } = usePhotobooth();
 
-    // Normalise template shape from DB or local
-    const normalizeTemplate = (t) => ({
-        id: t?.id,
-        name: t?.name,
-        className: t?.className || '',
-        background: t?.background_color || t?.background || '#ffffff',
-        textColor: t?.text_color || t?.textColor || '#2d3436',
-        borderStyle: t?.border_style || null,
-    });
-
-    const initial = selectedTemplate
-        ? normalizeTemplate(selectedTemplate)
-        : normalizeTemplate(LOCAL_FALLBACK_TEMPLATES[0]);
-
-    const [currentTemplate, setCurrentTemplate] = useState(initial);
-    const [filter, setFilter] = useState('none');
+    // Active template — initialized from context, kept in local state so user can override
+    const [tpl, setTpl] = useState(() => normaliseTemplate(selectedTemplate));
+    // Manual color override from palette (null = use template colours / image)
+    const [colorOverride, setColorOverride] = useState(null);
+    const [filter,      setFilter]      = useState('none');
     const [downloading, setDownloading] = useState(false);
-    const [uploaded, setUploaded] = useState(false);
+    const [saved,       setSaved]       = useState(false);
     const stripRef = useRef(null);
 
-    // Sync template when context changes (user navigates back & picks another)
+    // Sync when context changes (e.g. user went back and picked a different template)
     useEffect(() => {
-        if (selectedTemplate) {
-            setCurrentTemplate(normalizeTemplate(selectedTemplate));
-        }
+        setTpl(normaliseTemplate(selectedTemplate));
+        setColorOverride(null); // reset manual override
     }, [selectedTemplate]);
 
-    // Guard: redirect if no images
+    // Derive display values — manual override wins over template data
+    const activeBg    = colorOverride?.bg    ?? tpl.bgColor;
+    const activeText  = colorOverride?.text  ?? tpl.textColor;
+    const activeBgImg = colorOverride        ? null : tpl.bgImage; // image hidden when user picks a color
+
+    // ─── Guard: no photos ─────────────────────────────────────────────────────
     if (!capturedImages || capturedImages.length === 0) {
         return (
             <div className="result-empty">
@@ -59,42 +65,55 @@ export default function Result() {
         );
     }
 
+    // ─── Download ─────────────────────────────────────────────────────────────
     const downloadStrip = async () => {
         if (!stripRef.current) return;
         setDownloading(true);
         try {
             const dataUrl = await toPng(stripRef.current, { cacheBust: true, pixelRatio: 2 });
-            const link = document.createElement('a');
-            link.download = `memoria-${currentTemplate.id || 'strip'}-${Date.now()}.png`;
-            link.href = dataUrl;
-            link.click();
-            setUploaded(true); // visual feedback — strip is "saved"
+            const a = document.createElement('a');
+            a.download = `memoria-${Date.now()}.png`;
+            a.href = dataUrl;
+            a.click();
+            setSaved(true);
         } catch (err) {
             console.error('Download failed:', err);
+            alert('Gagal mengunduh. Coba lagi.');
         } finally {
             setDownloading(false);
         }
     };
 
-    const handleRetake = () => {
-        resetFlow();
-        navigate('/');
-    };
-
     return (
         <div className="result-wrapper">
             <div className="editor-layout">
-                {/* === Strip Preview === */}
+
+                {/* ─── Strip Preview ─────────────────────────────────────── */}
                 <div className="strip-preview-container">
                     <div
-                        className={`photo-strip ${currentTemplate.className}`}
+                        className="photo-strip"
                         ref={stripRef}
-                        style={{ backgroundColor: currentTemplate.background }}
+                        style={{
+                            backgroundColor: activeBg,
+                            backgroundImage: activeBgImg ? `url(${activeBgImg})` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}
                     >
+                        {/* Semi-transparent overlay so photos are still visible over image bg */}
+                        {activeBgImg && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background: 'rgba(255,255,255,0.15)',
+                                    pointerEvents: 'none',
+                                }}
+                            />
+                        )}
+
                         <div className="strip-content">
-                            <div className="branding" style={{ color: currentTemplate.textColor }}>
-                                MEMORIA
-                            </div>
+                            <div className="branding" style={{ color: activeText }}>MEMORIA</div>
 
                             {capturedImages.map((img, idx) => (
                                 <div key={idx} className="strip-photo-frame">
@@ -106,54 +125,72 @@ export default function Result() {
                                 </div>
                             ))}
 
-                            <div className="date" style={{ color: currentTemplate.textColor }}>
+                            <div className="date" style={{ color: activeText }}>
                                 {new Date().toLocaleDateString('id-ID', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
+                                    day: 'numeric', month: 'long', year: 'numeric',
                                 })}
                             </div>
 
                             {session?.session_id && (
-                                <div className="session-watermark" style={{ color: currentTemplate.textColor }}>
+                                <div className="session-watermark" style={{ color: activeText }}>
                                     #{session.session_id.slice(0, 8).toUpperCase()}
                                 </div>
                             )}
                         </div>
                     </div>
+
+                    {/* Template name badge */}
+                    <div className="template-name-badge">{tpl.name}</div>
                 </div>
 
-                {/* === Tools Panel === */}
+                {/* ─── Tools Panel ───────────────────────────────────────── */}
                 <div className="tools-panel">
                     <h2>Customize Strip</h2>
 
-                    {/* Template color picker */}
+                    {/* Colour palette */}
                     <div className="tool-section">
-                        <label><Palette size={18} /> Change Style</label>
+                        <label><Palette size={18} /> Change Background</label>
+
+                        {/* Button to restore original template */}
+                        {colorOverride && (
+                            <button
+                                className="restore-btn"
+                                onClick={() => setColorOverride(null)}
+                                title="Restore template background"
+                            >
+                                ↩ Kembalikan Template Asli
+                            </button>
+                        )}
+
                         <div className="template-picker">
-                            {LOCAL_FALLBACK_TEMPLATES.map((t) => (
+                            {COLOR_PALETTE.map((c) => (
                                 <button
-                                    key={t.id}
-                                    className={`template-dot ${currentTemplate.id === t.id ? 'active' : ''}`}
-                                    style={{ background: t.background_color }}
-                                    onClick={() => setCurrentTemplate(normalizeTemplate(t))}
-                                    title={t.name}
+                                    key={c.id}
+                                    className={`template-dot ${colorOverride?.id === c.id ? 'active' : ''}`}
+                                    style={{ background: c.bg, border: '2px solid #ccc' }}
+                                    onClick={() => setColorOverride(c)}
+                                    title={c.label}
                                 />
                             ))}
                         </div>
                     </div>
 
-                    {/* Filter picker */}
+                    {/* Photo filter */}
                     <div className="tool-section">
-                        <label><ImageIcon size={18} /> Filter</label>
+                        <label><ImageIcon size={18} /> Photo Filter</label>
                         <div className="filter-options">
-                            {['none', 'bw', 'sepia', 'vivid'].map((f) => (
+                            {[
+                                { key: 'none',  label: 'Normal' },
+                                { key: 'bw',    label: 'B&W' },
+                                { key: 'sepia', label: 'Sepia' },
+                                { key: 'vivid', label: 'Vivid' },
+                            ].map(({ key, label }) => (
                                 <button
-                                    key={f}
-                                    className={filter === f ? 'active' : ''}
-                                    onClick={() => setFilter(f)}
+                                    key={key}
+                                    className={filter === key ? 'active' : ''}
+                                    onClick={() => setFilter(key)}
                                 >
-                                    {f === 'none' ? 'Normal' : f === 'bw' ? 'B&W' : f.charAt(0).toUpperCase() + f.slice(1)}
+                                    {label}
                                 </button>
                             ))}
                         </div>
@@ -161,18 +198,19 @@ export default function Result() {
 
                     {/* Actions */}
                     <div className="action-buttons">
-                        <button className="retake-btn" onClick={handleRetake}>
+                        <button className="retake-btn" onClick={() => { resetFlow(); navigate('/'); }}>
                             <RefreshCw size={18} /> Retake
                         </button>
+
                         <button
-                            className={`download-btn ${uploaded ? 'saved' : ''}`}
+                            className={`download-btn ${saved ? 'saved' : ''}`}
                             onClick={downloadStrip}
                             disabled={downloading}
                         >
-                            {uploaded ? (
+                            {downloading ? (
+                                <><Loader2 size={18} className="spin" /> Menyimpan...</>
+                            ) : saved ? (
                                 <><Check size={18} /> Tersimpan!</>
-                            ) : downloading ? (
-                                <>Menyimpan...</>
                             ) : (
                                 <><Download size={18} /> Download Strip</>
                             )}
