@@ -1,4 +1,3 @@
-/* Shared styles for selection screens */
 .selection-container {
     width: 100%;
     min-height: 100vh;
@@ -7,95 +6,63 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    /* Dotted background pattern */
     background-color: #fcfcf9;
-    background-image: radial-gradient(#2c3e50 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-image: radial-gradient(#000 1.5px, transparent 1.5px);
+    background-size: 32px 32px;
     padding: 4rem 2rem;
+    font-family: 'Lexend', sans-serif;
 }
 
 .header-title {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 3rem;
-    position: relative;
+    margin-bottom: 4rem;
     z-index: 10;
 }
 
 .title-box {
     background: white;
-    border: 3px solid #2d3436;
-    padding: 0.5rem 2rem;
+    border: 4px solid black;
+    padding: 1rem 3rem;
     transform: rotate(-2deg);
-    z-index: 2;
+    box-shadow: 8px 8px 0px 0px black;
     position: relative;
-    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-}
-
-.title-box:hover {
-    transform: rotate(0deg) scale(1.05);
-}
-
-.title-box::after {
-    content: '';
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    width: 100%;
-    height: 100%;
-    background: var(--color-primary);
-    z-index: -1;
-    border: 3px solid transparent;
-    /* Keeps sizing */
-}
-
-/* Red background accent behind the title box */
-.title-box::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 100%;
-    height: 100%;
-    background: #ff6b6b;
-    z-index: -2;
-    transform: rotate(2deg);
 }
 
 .title-box.wide {
-    padding: 0.5rem 3rem;
+    padding: 1rem 4rem;
 }
 
 .title-box h1 {
     font-weight: 900;
-    font-size: 3rem;
-    color: #2d3436;
+    font-size: 4rem;
+    color: black;
     text-transform: uppercase;
     margin: 0;
-    letter-spacing: 2px;
+    letter-spacing: -2px;
 }
 
 .subtitle-badge {
-    background: white;
-    border: 2px solid #2d3436;
-    padding: 0.5rem 1.5rem;
-    font-weight: 600;
-    color: #636e72;
-    margin-top: 1rem;
-    box-shadow: 3px 3px 0 #dfe6e9;
+    background: var(--neo-yellow);
+    border: 3px solid black;
+    padding: 0.6rem 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: black;
+    margin-top: -10px;
+    margin-left: 40px;
+    box-shadow: 5px 5px 0px 0px black;
     z-index: 3;
 }
 
-/* Layout Options Grid */
 .options-grid {
     display: flex;
-    gap: 2rem;
+    gap: 3rem;
     flex-wrap: wrap;
     justify-content: center;
-    margin-bottom: 3rem;
-    max-width: 1000px;
+    margin-bottom: 4rem;
+    max-width: 1100px;
 }
 
 .option-card {
@@ -103,28 +70,28 @@
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     background: white;
-    padding: 1rem;
-    border: 3px solid #2d3436;
-    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    border: 4px solid black;
+    box-shadow: 10px 10px 0px 0px black;
+    transition: all 0.1s;
 }
 
 .option-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 15px 15px 0 rgba(0, 0, 0, 0.1);
+    transform: translate(-4px, -4px);
+    box-shadow: 15px 15px 0px 0px black;
 }
 
 .card-preview {
-    width: 180px;
-    height: 320px;
+    width: 200px;
+    height: 350px;
     background: #f1f2f6;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 1px solid #dfe6e9;
-    margin-bottom: 1rem;
-    padding: 10px;
+    border: 3px solid black;
+    margin-bottom: 1.5rem;
+    padding: 15px;
 }
 
 .preview-layout {
@@ -132,100 +99,86 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .preview-frame {
     flex: 1;
     background: #dfe6e9;
-    border: 2px solid #b2bec3;
-}
-
-.layout-2 .preview-frame {
-    border-color: #747d8c;
-}
-
-.layout-3 .preview-frame {
-    border-color: #747d8c;
+    border: 3px solid black;
 }
 
 .card-label {
     text-align: center;
     display: flex;
     align-items: baseline;
-    gap: 0.5rem;
+    gap: 0.8rem;
 }
 
 .big-number {
-    font-size: 3.5rem;
+    font-size: 4rem;
     font-weight: 900;
-    color: #2d3436;
+    color: black;
     line-height: 1;
 }
 
 .layout-name {
-    font-weight: 700;
-    color: #636e72;
-    font-size: 0.9rem;
+    font-weight: 900;
+    color: black;
+    font-size: 1.1rem;
     text-transform: uppercase;
 }
 
-/* Styles Grid - Improved for many options */
 .styles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 200px));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2.5rem;
     width: 100%;
-    max-width: 1050px;
-    margin-bottom: 4rem;
+    max-width: 1200px;
+    margin-bottom: 5rem;
     justify-content: center;
 }
 
 .style-card {
     background: white;
-    border: 2px solid #2d3436;
-    padding: 10px;
+    border: 4px solid black;
+    padding: 12px;
     cursor: pointer;
-    transition: all 0.2s;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
-    /* Force all cards the same width so grid is tidy */
-    width: 100%;
-    box-sizing: border-box;
+    box-shadow: 8px 8px 0px 0px black;
+    transition: all 0.1s;
 }
 
 .style-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.15);
-    border-color: var(--color-primary);
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0px 0px black;
+    border-color: black;
 }
 
-/* Fixed-height preview area — all cards look identical */
 .style-preview-wrapper {
     width: 100%;
-    height: 380px;       /* fixed — never grows with image */
+    height: 400px;
     flex-shrink: 0;
     background: #f5f6fa;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
     display: flex;
     justify-content: center;
     align-items: stretch;
-    border: 1px solid #eee;
-    overflow: hidden;    /* clip anything taller */
+    border: 3px solid black;
+    overflow: hidden;
     position: relative;
 }
 
 .preview-strip {
     width: 100%;
-    height: 100%;          /* fill the fixed 260px parent */
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 5px;
-    gap: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    padding: 15px 10px;
+    gap: 10px;
     box-sizing: border-box;
 }
 
@@ -233,65 +186,51 @@
     width: 90%;
     flex: 1;
     background: #eee;
-    border-radius: 2px;
+    border: 2px solid black;
 }
 
 .mini-brand {
-    font-size: 0.4rem;
+    font-size: 0.6rem;
     font-weight: 900;
-    margin-top: 5px;
-    opacity: 0.8;
-    letter-spacing: 1px;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .style-label {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: #2d3436;
+    font-weight: 900;
+    font-size: 1rem;
+    color: black;
+    text-transform: uppercase;
     text-align: center;
 }
 
 .back-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.8rem;
     background: white;
-    border: 2px solid #2d3436;
-    padding: 0.8rem 2rem;
-    border-radius: 50px;
-    font-weight: 700;
-    color: #2d3436;
-    transition: all 0.2s;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 3px solid black;
+    padding: 1rem 2.5rem;
+    font-weight: 900;
+    color: black;
+    text-transform: uppercase;
+    box-shadow: 6px 6px 0px 0px black;
+    transition: all 0.1s;
 }
 
 .back-button:hover {
-    background: #2d3436;
-    color: white;
-    transform: translateY(-2px);
+    background: var(--neo-pink);
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px 0px black;
 }
 
-/* Responsiveness */
 @media (max-width: 768px) {
-    .options-grid {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .styles-grid {
-        grid-template-columns: repeat(2, 160px);
-        gap: 1rem;
-    }
-
-    .title-box {
-        transform: none;
-    }
-
-    .title-box::before {
-        transform: rotate(3deg);
-    }
-
     .title-box h1 {
-        font-size: 2rem;
+        font-size: 2.5rem;
+    }
+    
+    .big-number {
+        font-size: 3rem;
     }
 }

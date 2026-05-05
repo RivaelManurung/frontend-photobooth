@@ -220,56 +220,50 @@ const Dashboard = () => {
               {/* Sales Activity Chart - Takes 4 columns */}
               <Card className="md:col-span-4">
                 <CardHeader>
-                  <CardTitle className="text-base font-semibold">Sale Activity - Monthly</CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardTitle className="text-base font-black uppercase tracking-tighter">Sale Activity - Monthly</CardTitle>
+                  <CardDescription className="text-xs font-bold uppercase">
                     Showing total sales for the last 6 months
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={revenue}>
-                      <defs>
-                        <linearGradient id="colorRevenue1" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorRevenue2" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                      <CartesianGrid strokeDasharray="0" stroke="black" vertical={false} strokeWidth={1} />
                       <XAxis 
                         dataKey="date" 
                         tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short' })}
-                        stroke="#888"
+                        stroke="black"
                         fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
+                        fontWeight={900}
+                        tickLine={true}
+                        axisLine={true}
                       />
                       <YAxis 
-                        stroke="#888"
+                        stroke="black"
                         fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
+                        fontWeight={900}
+                        tickLine={true}
+                        axisLine={true}
                         tickFormatter={(value) => `$${value / 1000}k`}
                       />
                       <Tooltip 
                         formatter={(value) => formatCurrency(value)}
                         labelFormatter={(label) => new Date(label).toLocaleDateString('id-ID')}
                         contentStyle={{ 
-                          borderRadius: '8px', 
-                          border: '1px solid #e5e7eb',
-                          fontSize: '12px'
+                          borderRadius: '0px', 
+                          border: '3px solid black',
+                          fontSize: '12px',
+                          fontWeight: '900',
+                          boxShadow: '4px 4px 0px 0px black'
                         }}
                       />
                       <Area 
-                        type="monotone" 
+                        type="stepAfter" 
                         dataKey="amount" 
-                        stroke="#f97316" 
-                        strokeWidth={2}
+                        stroke="black" 
+                        strokeWidth={4}
                         fillOpacity={1}
-                        fill="url(#colorRevenue1)"
+                        fill="var(--neo-cyan)"
                       />
                     </AreaChart>
                   </ResponsiveContainer>

@@ -32,7 +32,7 @@ const TabsList = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      'inline-flex items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground gap-1',
+      'inline-flex items-center justify-start border-[3px] border-black bg-black p-1 gap-1 neo-shadow',
       className
     )}
     {...props}
@@ -51,10 +51,10 @@ const TabsTrigger = React.forwardRef(({ className, value, children, ...props }, 
       aria-selected={isActive}
       onClick={() => onChange(value)}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center whitespace-nowrap border-[2px] border-transparent px-6 py-2 text-xs font-black uppercase transition-all',
         isActive
-          ? 'bg-background text-foreground shadow-sm'
-          : 'text-muted-foreground hover:text-foreground hover:bg-background/50',
+          ? 'bg-[var(--neo-yellow)] text-black border-black neo-shadow-sm'
+          : 'text-white hover:bg-white/10',
         className
       )}
       {...props}

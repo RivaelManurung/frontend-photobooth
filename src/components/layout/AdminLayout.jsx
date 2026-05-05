@@ -28,7 +28,7 @@ const Layout = () => {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header title={title} />
-        <main className="flex-1 overflow-y-auto bg-background p-6 pt-2">
+        <main className="flex-1 overflow-y-auto bg-[#F0F0F0] p-8">
           <Outlet />
         </main>
       </div>

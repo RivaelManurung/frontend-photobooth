@@ -13,40 +13,32 @@ const Header = ({ title = "Dashboard", showActions = true }) => {
   }, []);
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background px-6">
+    <header className="flex h-16 items-center justify-between border-b-[3px] border-black bg-white px-6">
       {/* Left Section - Title & Search */}
       <div className="flex flex-1 items-center gap-4">
-        <h1 className="text-xl font-semibold">{title}</h1>
+        <h1 className="text-2xl font-black uppercase tracking-tighter">{title}</h1>
         
-        <div className="relative ml-4 w-80">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative ml-8 w-96">
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-black" />
           <input
             type="text"
-            placeholder="Search"
-            className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            placeholder="SEARCH ANYTHING..."
+            className="h-10 w-full border-[3px] border-black bg-white pl-10 pr-4 text-xs font-bold uppercase focus:bg-[var(--neo-yellow)] focus:outline-none neo-shadow-sm transition-all"
           />
-          <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-            <span className="text-xs">⌘</span>K
-          </kbd>
         </div>
       </div>
 
       {/* Right Section - Actions */}
       {showActions && (
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex items-center gap-4">
+          <Button className="neo-btn-primary h-10 px-4 text-xs font-black">
             <Download className="mr-2 h-4 w-4" />
-            Download
+            EXPORT
           </Button>
           
-          <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            Pick a date
-          </Button>
-
-          <button className="relative rounded-md p-2 hover:bg-accent">
+          <button className="relative border-[3px] border-black bg-white p-2 neo-shadow hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
             <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive"></span>
+            <span className="absolute right-[-4px] top-[-4px] h-4 w-4 border-[2px] border-black bg-[var(--neo-pink)] text-[10px] font-black flex items-center justify-center">2</span>
           </button>
         </div>
       )}

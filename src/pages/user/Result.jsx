@@ -330,7 +330,7 @@ export default function Result() {
         {/* ── Tools ── */}
         <div className="tools-panel">
           <div className="tools-header">
-            <h2>✨ Customize Strip</h2>
+            <h2>Customize Strip</h2>
             <p>Sesuaikan tampilan akhir fotomu</p>
           </div>
 
