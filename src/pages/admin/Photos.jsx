@@ -1,254 +1,319 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
-import { Image as ImageIcon, Search, Download, Trash2, Heart, Calendar } from 'lucide-react';
-import { adminAPI } from '../../lib/api';
-import { useToast } from '../../components/ui/Toast';
-import { formatDateTime } from '../../lib/utils';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Image as ImageIcon, Trash2, Heart, Calendar,
+  Grid, List, RefreshCw, Download, Eye, X
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Modal from '../../components/ui/Modal';
+import {
+  StatCard, PageHeader, Pagination,
+  SearchBar, EmptyState, Spinner
+} from '../../components/ui/index.jsx';
+import { photoAPI, adminAPI } from '../../lib/api';
+import { getImageUrl } from '../../lib/api';
+import { useToast } from '../../components/ui/Toast';
+import { formatDateTime } from '../../lib/utils';
 
 const Photos = () => {
   const { addToast } = useToast();
-  const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const [photos, setPhotos]           = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [stats, setStats]             = useState({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [stats, setStats] = useState({
-    total: 0,
-    today: 0,
-    favorites: 0,
-  });
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [photoToDelete, setPhotoToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [filterType, setFilterType]   = useState('all');
+  const [viewMode, setViewMode]       = useState('grid'); // 'grid' | 'list'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages]   = useState(1);
 
-  useEffect(() => {
-    fetchPhotos();
-    fetchStats();
-  }, [filterType]);
+  // Preview modal
+  const [preview, setPreview] = useState(null);
 
-  const fetchPhotos = async () => {
+  // Delete confirm
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, photo: null, loading: false });
+
+  const fetchPhotos = useCallback(async () => {
     try {
       setLoading(true);
-      // Note: Backend doesn't have admin photos endpoint, using user photos as example
-      const response = await adminAPI.getStats();
-      // Mock photos data
-      setPhotos([
-        { id: 1, url: '/placeholder1.jpg', user_name: 'John Doe', template_name: 'Classic', created_at: new Date().toISOString(), is_favorite: true },
-        { id: 2, url: '/placeholder2.jpg', user_name: 'Jane Smith', template_name: 'Modern', created_at: new Date().toISOString(), is_favorite: false },
-      ]);
-    } catch (error) {
-      console.error('Error fetching photos:', error);
+      const params = { page: currentPage, limit: 20 };
+      if (filterType === 'favorites') params.is_favorite = true;
+      const res = await photoAPI.getPhotos(params);
+      setPhotos(res.data?.photos || []);
+      setTotalPages(res.data?.total_pages || 1);
+    } catch (err) {
+      console.error('fetchPhotos:', err);
+      addToast({ title: 'Error', description: 'Gagal memuat photos', variant: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filterType]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const response = await adminAPI.getStats();
-      setStats({
-        total: response.data.total_photos || 0,
-        today: response.data.photos_today || 0,
-        favorites: 0,
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+      const res = await adminAPI.getStats();
+      setStats(res.data || {});
+    } catch (err) {
+      console.error('fetchStats:', err);
     }
-  };
+  }, []);
 
-  const handleDeleteClick = (photo) => {
-    setPhotoToDelete(photo);
-    setDeleteDialogOpen(true);
-  };
+  useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
+  useEffect(() => { fetchStats(); }, [fetchStats]);
 
-  const confirmDelete = async () => {
-    if (!photoToDelete) return;
-    
+  const handleDelete = async () => {
+    if (!deleteDialog.photo) return;
+    setDeleteDialog((d) => ({ ...d, loading: true }));
     try {
-      setIsDeleting(true);
-      // await adminAPI.deletePhoto(photoToDelete.id);
-      addToast({
-        title: 'Success',
-        description: 'Photo deleted successfully',
-        variant: 'success'
-      });
+      await photoAPI.deletePhoto(deleteDialog.photo.id);
+      addToast({ title: 'Success', description: 'Foto berhasil dihapus', variant: 'success' });
       fetchPhotos();
-    } catch (error) {
-      console.error('Error deleting photo:', error);
-      addToast({
-        title: 'Error',
-        description: 'Failed to delete photo',
-        variant: 'error'
-      });
+      fetchStats();
+    } catch {
+      addToast({ title: 'Error', description: 'Gagal menghapus foto', variant: 'error' });
     } finally {
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setPhotoToDelete(null);
+      setDeleteDialog({ open: false, photo: null, loading: false });
     }
   };
 
-  const filteredPhotos = photos.filter(photo => {
+  const handleDownload = async (photo) => {
+    try {
+      const url = getImageUrl(photo.url || photo.file_path);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `photo-${photo.id}.png`;
+      a.target = '_blank';
+      a.click();
+    } catch {
+      addToast({ title: 'Error', description: 'Gagal mendownload foto', variant: 'error' });
+    }
+  };
+
+  const filtered = photos.filter((p) => {
     if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      photo.user_name?.toLowerCase().includes(query) ||
-      photo.template_name?.toLowerCase().includes(query)
-    );
+    const q = searchQuery.toLowerCase();
+    return String(p.id).includes(q) || String(p.user_id).includes(q) || p.template_name?.toLowerCase().includes(q);
   });
 
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading photos...</p>
-        </div>
-      </div>
-    );
-  }
+  const imgSrc = (photo) => {
+    const raw = photo.url || photo.file_path || photo.thumbnail_url || '';
+    return raw ? getImageUrl(raw) : null;
+  };
+
+  // ── Placeholder SVG ──────────────────────────────────────────────────────
+  const placeholder = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='280'%3E%3Crect fill='%23f1f5f9' width='200' height='280'/%3E%3Ctext fill='%2394a3b8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='13'%3ENo Image%3C/text%3E%3C/svg%3E`;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Photos</h1>
-        <p className="text-muted-foreground">Manage all user photos</p>
-      </div>
+      <PageHeader
+        title="Photos"
+        description="Kelola semua foto yang telah diambil pengguna"
+        action={
+          <Button variant="outline" onClick={() => { fetchPhotos(); fetchStats(); }}>
+            <RefreshCw className="mr-2 h-4 w-4" />Refresh
+          </Button>
+        }
+      />
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Photos</CardTitle>
-            <ImageIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">All time</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today</CardTitle>
-            <Calendar className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.today}</div>
-            <p className="text-xs text-muted-foreground">Photos created today</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Favorites</CardTitle>
-            <Heart className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.favorites}</div>
-            <p className="text-xs text-muted-foreground">Marked as favorite</p>
-          </CardContent>
-        </Card>
+        <StatCard title="Total Photos" value={stats.total_photos ?? 0} icon={ImageIcon} iconColor="text-muted-foreground" />
+        <StatCard title="Hari Ini" value={stats.photos_today ?? 0} icon={Calendar} iconColor="text-green-600" trend="Diambil hari ini" />
+        <StatCard title="Favorit" value={photos.filter((p) => p.is_favorite).length} icon={Heart} iconColor="text-red-500" />
       </div>
 
-      {/* Filters */}
+      {/* Filters + view toggle */}
       <Card>
-        <CardHeader>
-          <CardTitle>Photo Gallery</CardTitle>
-          <CardDescription>Browse and manage photos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by user or template..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
-            <Select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <option value="all">All Photos</option>
-              <option value="favorites">Favorites</option>
-              <option value="recent">Recent</option>
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Cari ID foto, user ID..." className="flex-1" />
+            <Select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}>
+              <option value="all">Semua Foto</option>
+              <option value="favorites">Favorit</option>
             </Select>
+            <div className="flex rounded-md border overflow-hidden flex-shrink-0">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+                title="Grid View"
+              >
+                <Grid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Photo Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredPhotos.map((photo) => (
-          <Card key={photo.id} className="overflow-hidden">
-            <div className="aspect-square bg-muted relative">
-              <img 
-                src={photo.url} 
-                alt="Photo" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="24"%3ENo Image%3C/text%3E%3C/svg%3E';
-                }}
-              />
-              {photo.is_favorite && (
-                <div className="absolute top-2 right-2">
-                  <Badge variant="destructive">
-                    <Heart className="h-3 w-3 fill-current" />
-                  </Badge>
-                </div>
-              )}
-            </div>
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{photo.user_name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {photo.template_name}
-                  </Badge>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {formatDateTime(photo.created_at)}
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Download className="h-3 w-3 mr-1" />
-                    Download
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleDeleteClick(photo)}
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
-                </div>
+      {/* Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Galeri Foto ({filtered.length})</CardTitle>
+        </CardHeader>
+        <CardContent className={viewMode === 'grid' ? 'p-4' : 'p-0'}>
+          {loading ? (
+            <div className="flex items-center justify-center py-20"><Spinner size="lg" /></div>
+          ) : filtered.length === 0 ? (
+            <EmptyState icon={ImageIcon} title="Tidak ada foto" description="Belum ada foto yang diambil oleh pengguna." />
+          ) : viewMode === 'grid' ? (
+            <>
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {filtered.map((photo) => (
+                  <div key={photo.id} className="group relative rounded-lg overflow-hidden border bg-muted aspect-[3/4]">
+                    <img
+                      src={imgSrc(photo) || placeholder}
+                      alt={`Photo #${photo.id}`}
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      onError={(e) => { e.target.src = placeholder; }}
+                    />
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-end">
+                      <div className="w-full p-2 translate-y-full group-hover:translate-y-0 transition-transform flex gap-1 justify-end">
+                        <button
+                          onClick={() => setPreview(photo)}
+                          className="rounded-md bg-white/20 backdrop-blur p-1.5 text-white hover:bg-white/40"
+                          title="Preview"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDownload(photo)}
+                          className="rounded-md bg-white/20 backdrop-blur p-1.5 text-white hover:bg-white/40"
+                          title="Download"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteDialog({ open: true, photo, loading: false })}
+                          className="rounded-md bg-red-500/70 backdrop-blur p-1.5 text-white hover:bg-red-600/80"
+                          title="Hapus"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    {photo.is_favorite && (
+                      <div className="absolute top-1.5 left-1.5">
+                        <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-xs font-medium">#{photo.id}</p>
+                      <p className="text-white/70 text-[10px]">User {photo.user_id}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <div className="mt-4">
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              </div>
+            </>
+          ) : (
+            // List View
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Preview</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>User ID</TableHead>
+                      <TableHead>Template</TableHead>
+                      <TableHead>Favorit</TableHead>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead className="text-right">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((photo) => (
+                      <TableRow key={photo.id}>
+                        <TableCell>
+                          <div className="w-10 h-14 rounded overflow-hidden bg-muted flex-shrink-0">
+                            <img
+                              src={imgSrc(photo) || placeholder}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.src = placeholder; }}
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">#{photo.id}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{photo.user_id ?? '—'}</TableCell>
+                        <TableCell className="text-sm">{photo.template_name ?? photo.template_id ?? '—'}</TableCell>
+                        <TableCell>
+                          {photo.is_favorite
+                            ? <Badge variant="destructive"><Heart className="h-3 w-3 fill-current mr-1" />Favorit</Badge>
+                            : <span className="text-muted-foreground text-xs">—</span>}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{formatDateTime(photo.created_at)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setPreview(photo)} title="Preview"><Eye className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDownload(photo)} title="Download"><Download className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteDialog({ open: true, photo, loading: false })} title="Hapus"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </>
+          )}
+        </CardContent>
+      </Card>
 
-      {filteredPhotos.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <ImageIcon className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No photos found</p>
-          </CardContent>
-        </Card>
+      {/* ── Preview Modal ── */}
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setPreview(null)}>
+          <button className="absolute top-4 right-4 text-white/80 hover:text-white" onClick={() => setPreview(null)}>
+            <X className="h-8 w-8" />
+          </button>
+          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={imgSrc(preview) || placeholder}
+              alt={`Photo #${preview.id}`}
+              className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg shadow-2xl"
+              onError={(e) => { e.target.src = placeholder; }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black/60 px-4 py-2 flex items-center justify-between">
+              <div>
+                <p className="text-white text-sm font-medium">Photo #{preview.id}</p>
+                <p className="text-white/60 text-xs">{formatDateTime(preview.created_at)}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/20" onClick={() => handleDownload(preview)}>
+                  <Download className="h-4 w-4 mr-1" />Download
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => { setDeleteDialog({ open: true, photo: preview, loading: false }); setPreview(null); }}>
+                  <Trash2 className="h-4 w-4 mr-1" />Hapus
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
+      {/* ── Delete Confirm ── */}
       <ConfirmDialog
-        isOpen={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={confirmDelete}
-        isLoading={isDeleting}
+        isOpen={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, photo: null, loading: false })}
+        onConfirm={handleDelete}
+        isLoading={deleteDialog.loading}
         title="Hapus Foto"
-        description="Apakah Anda yakin ingin menghapus foto ini? Foto yang dihapus tidak dapat dikembalikan."
+        description={`Yakin ingin menghapus foto #${deleteDialog.photo?.id}? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Hapus"
       />
     </div>
   );

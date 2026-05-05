@@ -74,7 +74,7 @@ export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   getProfile: () => api.get('/profile'),
   updateProfile: (data) => api.put('/profile', data),
-  changePassword: (data) => api.post('/profile/password', data),
+  changePassword: (data) => api.post('/profile/change-password', data),
 };
 
 // Admin APIs
@@ -120,6 +120,16 @@ export const adminAPI = {
   deletePromoCode: (id) => api.delete(`/admin/promo/${id}`),
   getPromoUsage: (id) => api.get(`/admin/promo/${id}/usage`),
   togglePromoStatus: (id) => api.post(`/admin/promo/${id}/toggle`),
+
+  // Admin Orders (from /orders endpoint with admin context)
+  getOrders: (params) => api.get('/orders', { params }),
+  getOrder: (id) => api.get(`/orders/${id}`),
+  cancelOrder: (id) => api.post(`/orders/${id}/cancel`),
+
+  // Admin Sessions
+  getAllSessions: (params) => api.get('/sessions', { params }),
+  endSession: (id) => api.post(`/sessions/${id}/end`),
+  deleteSession: (id) => api.delete(`/sessions/${id}`),
 };
 
 // Photo APIs
@@ -139,7 +149,7 @@ export const templatesAPI = {
   incrementUsage: (id) => api.post(`/templates/${id}/usage`),
 };
 
-// Promo APIs (User)
+// Promo APIs (User — validate only)
 export const promoAPI = {
   validatePromoCode: (data) => api.post('/promo/validate', data),
 };

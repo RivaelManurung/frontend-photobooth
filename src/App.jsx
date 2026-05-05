@@ -84,6 +84,7 @@ function App() {
               <Route path="promos" element={<Promos />} />
               <Route path="sessions" element={<Sessions />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="settings/profile" element={<Settings />} />
             </Route>
 
             {/* User Routes */}
