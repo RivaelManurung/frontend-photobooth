@@ -22,6 +22,7 @@ export default function PhotoBooth() {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null); // Ref for stable stream access
+    const sessionStartedRef = useRef(false); // Ref to prevent double start
 
     // SENIOR-FRONTEND: Separated camera logic from UI state to prevent flickering
     const startCamera = useCallback(async () => {
@@ -113,9 +114,11 @@ export default function PhotoBooth() {
     };
 
     const startSession = async () => {
-        if (capturing) return; // Prevent double start
+        if (capturing || sessionStartedRef.current) return; // Prevent double start
         
+        sessionStartedRef.current = true;
         setCapturing(true);
+        setCapturedPhotos([]); // CLEAR existing photos before starting new session
         const newPhotos = [];
 
         for (let i = 0; i < photoCount; i++) {
