@@ -83,11 +83,13 @@
     position: relative;
 }
 
-/* DB template thumbnail */
+/* DB template thumbnail — always fills the fixed 260px box */
 .template-thumbnail {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover;      /* crop, never stretch */
+    object-position: top;   /* show the top of the strip */
+    display: block;
 }
 
 /* Category label under template name */
