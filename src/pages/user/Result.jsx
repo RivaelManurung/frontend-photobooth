@@ -458,11 +458,30 @@ export default function Result() {
                        : <><Download size={18}/> Download Strip</>}
             </button>
             {saved && (
-              <div className="cloud-status">
-                <Cloud size={13}/>
-                {uploading ? <span>Menyimpan ke cloud...</span>
-                 : cloud   ? <span>✅ Tersimpan di Cloud</span>
-                           : null}
+              <div className="share-section mt-6 p-6 glass rounded-3xl animate-in fade-in slide-in-from-bottom duration-700">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="qr-container p-4 bg-white rounded-2xl shadow-2xl">
+                    {uploading ? (
+                      <div className="w-[150px] h-[150px] flex items-center justify-center">
+                        <Loader2 className="spin text-primary" size={32} />
+                      </div>
+                    ) : cloud ? (
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(cloud)}`} 
+                        alt="Download QR" 
+                        className="w-[150px] h-[150px]"
+                      />
+                    ) : (
+                      <div className="w-[150px] h-[150px] flex items-center justify-center text-xs text-muted-foreground">
+                        Gagal memuat QR
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Scan untuk Download!</h3>
+                    <p className="text-xs text-muted-foreground">Foto kamu sudah tersimpan di cloud selama 24 jam.</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

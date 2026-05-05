@@ -1,150 +1,65 @@
 .booth-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-color: #000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+    @apply fixed inset-0 w-full h-screen bg-slate-950 flex flex-col items-center justify-center z-[100];
+    background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
 }
 
 .camera-frame {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    aspect-ratio: 4/3;
-    background: #1a1a1a;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    @apply relative w-full max-w-[900px] aspect-[4/3] bg-slate-900 overflow-hidden ring-1 ring-white/10;
+    box-shadow: 0 0 100px -20px rgba(0, 0, 0, 0.8);
 }
 
 .camera-feed {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    @apply w-full h-full object-cover;
 }
 
 .countdown-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.2);
-    z-index: 10;
+    @apply absolute inset-0 flex items-center justify-center z-10;
 }
 
 .countdown-number {
-    font-size: 15rem;
-    font-weight: 900;
-    color: white;
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    animation: pop 0.5s ease-out;
+    @apply text-white font-black drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)];
+    font-size: clamp(8rem, 20vw, 15rem);
+    animation: pulse-grow 1s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
 
-@keyframes pop {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+@keyframes pulse-grow {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
 }
 
 .flash-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: white;
-    z-index: 200;
-    pointer-events: none;
+    @apply fixed inset-0 bg-white z-[200] pointer-events-none;
 }
 
 .controls {
-    margin-top: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    z-index: 20;
+    @apply mt-10 flex items-center justify-center gap-10 z-20;
 }
 
 .shutter-btn {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    background-clip: padding-box;
-    transition: transform 0.2s;
+    @apply w-24 h-24 rounded-full bg-white flex items-center justify-center border-8 border-white/20 transition-all duration-300;
 }
 
 .shutter-btn:hover {
-    transform: scale(1.1);
+    @apply scale-110 shadow-[0_0_40px_rgba(255,255,255,0.4)];
 }
 
 .shutter-btn svg {
-    color: var(--color-black);
+    @apply text-slate-900;
 }
 
 .control-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    backdrop-filter: blur(10px);
-    transition: background 0.2s;
-}
-
-.control-btn:hover {
-    background: rgba(255, 255, 255, 0.4);
+    @apply w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-300;
 }
 
 .status-text {
-    color: white;
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-align: center;
+    @apply text-white text-xl font-semibold tracking-wider text-center drop-shadow-md;
 }
 
 /* Photo counter dots */
 .photo-counter {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 1rem;
-    z-index: 20;
+    @apply flex gap-3 mb-6 z-20;
 }
 
 .counter-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.6);
-    transition: all 0.3s ease;
-}
-
-.counter-dot.filled {
-    background: white;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    @apply w-4 h-4 rounded-full border-2 border-white/20 transition-all duration-500;
 }

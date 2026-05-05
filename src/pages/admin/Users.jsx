@@ -1,36 +1,59 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Users as UsersIcon, Search, Download, Filter, MoreVertical, UserCheck, UserX, Trash2, 
+  CheckSquare, Square, Columns2, Info, Mail, Shield, Calendar, Activity, TrendingUp
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
-import { Users as UsersIcon, Search, Download, Filter, MoreVertical, UserCheck, UserX, Trash2 } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import Checkbox from '../../components/ui/Checkbox';
+import { Avatar, AvatarFallback } from '../../components/ui/Avatar';
+import Input from '../../components/ui/Input';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import {
+  Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
+  Tabs, TabsList, TabsTrigger, TabsContent,
+  PageHeader, Pagination, SearchBar, EmptyState, Spinner, Separator
+} from '../../components/ui/index.jsx';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
+} from '../../components/ui/DropdownMenu';
 import { adminAPI } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { formatDateTime } from '../../lib/utils';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import { Avatar, AvatarFallback } from '../../components/ui/Avatar';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
-import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { cn } from '../../lib/utils';
 
 const Users = () => {
   const { addToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
+  const [activeTab, setActiveTab] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedIds, setSelectedIds] = useState([]);
+  
+  // Column visibility
+  const [columnVisibility, setColumnVisibility] = useState({
+    user: true,
+    email: true,
+    role: true,
+    subscription: true,
+    status: true,
+    joined: true,
+  });
+
+  // Drawer for user details
+  const [selectedUser, setSelectedUser] = useState(null);
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [bulkDeleteDialog, setBulkDeleteDialog] = useState({ open: false, loading: false });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, filterRole, filterStatus]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const params = {
@@ -38,84 +61,81 @@ const Users = () => {
         limit: 20,
       };
       
-      if (filterRole !== 'all') params.role = filterRole;
+      if (activeTab !== 'all') params.role = activeTab;
       if (filterStatus !== 'all') params.status = filterStatus;
       
       const response = await adminAPI.getUsers(params);
       setUsers(response.data.users || []);
       setTotalPages(response.data.total_pages || 1);
+      setSelectedIds([]);
     } catch (error) {
       console.error('Error fetching users:', error);
+      addToast({ title: 'Error', description: 'Gagal memuat daftar pengguna', variant: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, activeTab, filterStatus]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      fetchUsers();
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      const response = await adminAPI.searchUsers({ query: searchQuery });
-      setUsers(response.data.users || []);
-    } catch (error) {
-      console.error('Error searching users:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const handleUpdateStatus = async (userId, newStatus) => {
     try {
       await adminAPI.updateUserStatus(userId, { status: newStatus });
-      addToast({
-        title: 'Success',
-        description: 'User status updated successfully',
-        variant: 'success'
-      });
+      addToast({ title: 'Success', description: 'User status updated successfully', variant: 'success' });
       fetchUsers();
+      if (selectedUser?.id === userId) {
+        setSelectedUser(p => ({ ...p, status: newStatus }));
+      }
     } catch (error) {
       console.error('Error updating user status:', error);
-      addToast({
-        title: 'Error',
-        description: 'Failed to update user status',
-        variant: 'error'
-      });
+      addToast({ title: 'Error', description: 'Failed to update user status', variant: 'error' });
     }
-  };
-
-  const handleDeleteClick = (user) => {
-    setUserToDelete(user);
-    setDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!userToDelete) return;
-    
     try {
       setIsDeleting(true);
       await adminAPI.deleteUser(userToDelete.id);
-      addToast({
-        title: 'Success',
-        description: 'User deleted successfully',
-        variant: 'success'
-      });
+      addToast({ title: 'Success', description: 'User deleted successfully', variant: 'success' });
       fetchUsers();
+      if (selectedUser?.id === userToDelete.id) setSelectedUser(null);
     } catch (error) {
       console.error('Error deleting user:', error);
-      addToast({
-        title: 'Error',
-        description: 'Failed to delete user',
-        variant: 'error'
-      });
+      addToast({ title: 'Error', description: 'Failed to delete user', variant: 'error' });
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     }
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleteDialog((d) => ({ ...d, loading: true }));
+    try {
+      await Promise.all(selectedIds.map(id => adminAPI.deleteUser(id)));
+      addToast({ title: 'Success', description: `${selectedIds.length} pengguna berhasil dihapus`, variant: 'success' });
+      setSelectedIds([]);
+      fetchUsers();
+    } catch {
+      addToast({ title: 'Error', description: 'Gagal menghapus beberapa pengguna', variant: 'error' });
+    } finally {
+      setBulkDeleteDialog({ open: false, loading: false });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredUsers.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredUsers.map(u => u.id));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   };
 
   const handleExportUsers = async () => {
@@ -130,19 +150,9 @@ const Users = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
-      addToast({
-        title: 'Success',
-        description: 'Users exported successfully',
-        variant: 'success'
-      });
+      addToast({ title: 'Success', description: 'Users exported successfully', variant: 'success' });
     } catch (error) {
-      console.error('Error exporting users:', error);
-      addToast({
-        title: 'Error',
-        description: 'Failed to export users',
-        variant: 'error'
-      });
+      addToast({ title: 'Error', description: 'Failed to export users', variant: 'error' });
     }
   };
 
@@ -155,240 +165,264 @@ const Users = () => {
     );
   });
 
-  if (loading && users.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading users...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">Manage all registered users</p>
-        </div>
-        <Button onClick={handleExportUsers}>
-          <Download className="mr-2 h-4 w-4" />
-          Export Users
-        </Button>
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setCurrentPage(1); }}>
+        <div className="flex items-center justify-between mb-4">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="all">All Users</TabsTrigger>
+            <TabsTrigger value="admin">Admins</TabsTrigger>
+            <TabsTrigger value="user">Customers</TabsTrigger>
+          </TabsList>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <UsersIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <UserCheck className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(u => u.status === 'active').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Premium Users</CardTitle>
-            <UsersIcon className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(u => u.subscription_tier === 'premium').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-            <UsersIcon className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(u => u.role === 'admin').length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>Search and filter users</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-9"
-              />
-            </div>
-            
-            <Select value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
-              <option value="all">All Roles</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </Select>
-            
-            <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </Select>
-            
-            <Button onClick={handleSearch}>
-              <Filter className="mr-2 h-4 w-4" />
-              Search
+          <div className="flex items-center gap-2">
+            {selectedIds.length > 0 && (
+              <Button variant="destructive" size="sm" onClick={() => setBulkDeleteDialog({ open: true, loading: false })}>
+                <Trash2 className="mr-2 h-4 w-4" /> Hapus Terpilih ({selectedIds.length})
+              </Button>
+            )}
+            <Button onClick={handleExportUsers} variant="outline" size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Users Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Subscription</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {user.name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-xs text-muted-foreground">ID: {user.id}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={user.subscription_tier === 'premium' ? 'warning' : 'outline'}>
-                        {user.subscription_tier || 'free'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          user.status === 'active' ? 'success' :
-                          user.status === 'suspended' ? 'destructive' :
-                          'secondary'
-                        }
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDateTime(user.created_at)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {user.status === 'active' ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUpdateStatus(user.id, 'suspended')}
-                          >
-                            <UserX className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUpdateStatus(user.id, 'active')}
-                          >
-                            <UserCheck className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(user)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Columns2 className="h-4 w-4 mr-2" />
+                  Customize Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {Object.keys(columnVisibility).map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col}
+                    checked={columnVisibility[col]}
+                    onCheckedChange={(val) => setColumnVisibility(p => ({ ...p, [col]: val }))}
+                    className="capitalize"
+                  >
+                    {col.replace('_', ' ')}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between p-4">
-          <div className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-      )}
-        </CardContent>
-      </Card>
 
+        <TabsContent value={activeTab} className="mt-0">
+          <Card className="overflow-hidden border-none shadow-none bg-transparent">
+            <CardContent className="p-0">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+                <SearchBar 
+                  value={searchQuery} 
+                  onChange={setSearchQuery} 
+                  placeholder="Search by name or email..." 
+                  className="flex-1"
+                />
+                <div className="flex gap-2">
+                  <div className="w-40">
+                    <select 
+                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm outline-none"
+                      value={filterStatus}
+                      onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+              ) : filteredUsers.length === 0 ? (
+                <EmptyState icon={UsersIcon} title="No users found" description="Try adjusting your filters or search query." />
+              ) : (
+                <div className="rounded-xl border bg-card overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0} onClick={toggleSelectAll} />
+                        </TableHead>
+                        {columnVisibility.user && <TableHead>User</TableHead>}
+                        {columnVisibility.email && <TableHead>Email</TableHead>}
+                        {columnVisibility.role && <TableHead>Role</TableHead>}
+                        {columnVisibility.subscription && <TableHead>Subscription</TableHead>}
+                        {columnVisibility.status && <TableHead>Status</TableHead>}
+                        {columnVisibility.joined && <TableHead>Joined</TableHead>}
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id} className={cn(selectedIds.includes(user.id) && "bg-muted/30")}>
+                          <TableCell><Checkbox checked={selectedIds.includes(user.id)} onClick={() => toggleSelect(user.id)} /></TableCell>
+                          {columnVisibility.user && (
+                            <TableCell>
+                              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUser(user)}>
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                                    {user.name?.charAt(0) || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="max-w-[150px]">
+                                  <div className="font-medium text-sm truncate">{user.name}</div>
+                                  <div className="text-[10px] text-muted-foreground font-mono truncate">ID: {user.id}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                          )}
+                          {columnVisibility.email && <TableCell className="text-sm">{user.email}</TableCell>}
+                          {columnVisibility.role && (
+                            <TableCell>
+                              <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-[10px]">
+                                {user.role}
+                              </Badge>
+                            </TableCell>
+                          )}
+                          {columnVisibility.subscription && (
+                            <TableCell>
+                              <Badge variant={user.subscription_tier === 'premium' ? 'warning' : 'outline'} className="text-[10px]">
+                                {user.subscription_tier || 'free'}
+                              </Badge>
+                            </TableCell>
+                          )}
+                          {columnVisibility.status && (
+                            <TableCell>
+                              <Badge 
+                                variant={
+                                  user.status === 'active' ? 'success' :
+                                  user.status === 'suspended' ? 'destructive' :
+                                  'secondary'
+                                }
+                                className="text-[10px]"
+                              >
+                                {user.status}
+                              </Badge>
+                            </TableCell>
+                          )}
+                          {columnVisibility.joined && <TableCell className="text-xs text-muted-foreground">{formatDateTime(user.created_at)}</TableCell>}
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedUser(user)}><Info className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              <div className="mt-6 flex items-center justify-between px-2">
+                <div className="text-sm text-muted-foreground">
+                  {selectedIds.length} of {filteredUsers.length} selected
+                </div>
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* ── User Detail Drawer ── */}
+      <Drawer isOpen={!!selectedUser} onClose={() => setSelectedUser(null)}>
+        <DrawerHeader>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-12 w-12 border-2 border-primary/10">
+              <AvatarFallback className="bg-primary/5 text-primary text-xl">
+                {selectedUser?.name?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <DrawerTitle>{selectedUser?.name}</DrawerTitle>
+              <DrawerDescription>{selectedUser?.email}</DrawerDescription>
+            </div>
+          </div>
+        </DrawerHeader>
+
+        <DrawerContent className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 rounded-lg border bg-muted/30 space-y-1">
+              <div className="flex items-center text-[10px] uppercase font-bold text-muted-foreground">
+                <Shield className="h-3 w-3 mr-1.5" /> Role
+              </div>
+              <p className="text-sm font-medium capitalize">{selectedUser?.role}</p>
+            </div>
+            <div className="p-3 rounded-lg border bg-muted/30 space-y-1">
+              <div className="flex items-center text-[10px] uppercase font-bold text-muted-foreground">
+                <Activity className="h-3 w-3 mr-1.5" /> Status
+              </div>
+              <Badge 
+                variant={selectedUser?.status === 'active' ? 'success' : 'destructive'} 
+                className="text-[10px] h-5"
+              >
+                {selectedUser?.status}
+              </Badge>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center text-muted-foreground">
+                <Mail className="h-4 w-4 mr-2" /> Email
+              </div>
+              <span className="font-medium">{selectedUser?.email}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-2" /> Joined Date
+              </div>
+              <span className="font-medium">{formatDateTime(selectedUser?.created_at)}</span>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="p-4 rounded-xl border border-primary/10 bg-primary/5 space-y-3">
+            <div className="flex items-center gap-2 font-semibold text-sm">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              User Insights
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Pengguna ini telah melakukan 5 sesi foto dalam 30 hari terakhir. Total transaksi mencapai Rp 250.000 dengan metode pembayaran QRIS.
+            </p>
+          </div>
+        </DrawerContent>
+
+        <DrawerFooter>
+          {selectedUser?.status === 'active' ? (
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              onClick={() => handleUpdateStatus(selectedUser.id, 'suspended')}
+            >
+              <UserX className="h-4 w-4 mr-2" /> Suspend
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              onClick={() => handleUpdateStatus(selectedUser.id, 'active')}
+            >
+              <UserCheck className="h-4 w-4 mr-2" /> Activate
+            </Button>
+          )}
+          <Button 
+            variant="destructive" 
+            onClick={() => { setUserToDelete(selectedUser); setDeleteDialogOpen(true); }}
+          >
+            <Trash2 className="h-4 w-4 mr-2" /> Delete
+          </Button>
+        </DrawerFooter>
+      </Drawer>
+
+      {/* ── Dialogs ── */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
@@ -397,8 +431,20 @@ const Users = () => {
         title="Hapus Pengguna"
         description={`Apakah Anda yakin ingin menghapus pengguna "${userToDelete?.name}"? Seluruh data terkait pengguna ini akan dihapus permanen.`}
       />
+
+      <ConfirmDialog
+        isOpen={bulkDeleteDialog.open}
+        onClose={() => setBulkDeleteDialog({ open: false, loading: false })}
+        onConfirm={handleBulkDelete}
+        isLoading={bulkDeleteDialog.loading}
+        title="Hapus Terpilih"
+        description={`Apakah Anda yakin ingin menghapus ${selectedIds.length} pengguna yang dipilih? Seluruh data terkait mereka akan dihapus permanen.`}
+        confirmText="Hapus Semua"
+      />
     </div>
   );
 };
 
 export default Users;
+
+

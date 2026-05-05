@@ -125,6 +125,7 @@ export const adminAPI = {
   getOrders: (params) => api.get('/orders', { params }),
   getOrder: (id) => api.get(`/orders/${id}`),
   cancelOrder: (id) => api.post(`/orders/${id}/cancel`),
+  deleteOrder: (id) => api.delete(`/orders/${id}`),
 
   // Admin Sessions
   getAllSessions: (params) => api.get('/sessions', { params }),

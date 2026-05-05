@@ -165,3 +165,7 @@ export const SearchBar = ({ value, onChange, onSearch, placeholder = 'Search...'
     />
   </div>
 );
+
+export { default as Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose } from './Drawer';
+export { default as Separator } from './Separator';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
