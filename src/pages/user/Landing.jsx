@@ -31,47 +31,24 @@ export default function Landing({ recentPhotos }) {
                             View Gallery
                         </button>
                     </div>
-
-                    <div className="stats-row">
-                        <div className="stat-item">
-                            <strong>10k+</strong>
-                            <span>Photos Taken</span>
-                        </div>
-                        <div className="stat-item">
-                            <strong>50+</strong>
-                            <span>Templates</span>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="hero-visual">
-                    {recentPhotos && recentPhotos.length > 0 ? (
+                    {recentPhotos && recentPhotos.length > 0 && (
                         <>
                             <div className="visual-card main-card" style={{ transform: 'rotate(0deg)' }}>
-                                <img src={recentPhotos[0]} alt="Your Turn" />
+                                <img src={recentPhotos[0]} alt="Recent" />
                             </div>
                             {recentPhotos[1] && (
                                 <div className="visual-card floating-card card-1">
-                                    <img src={recentPhotos[1]} alt="Your Turn 2" />
+                                    <img src={recentPhotos[1]} alt="Recent 2" />
                                 </div>
                             )}
                             {recentPhotos[2] && (
                                 <div className="visual-card floating-card card-2">
-                                    <img src={recentPhotos[2]} alt="Your Turn 3" />
+                                    <img src={recentPhotos[2]} alt="Recent 3" />
                                 </div>
                             )}
-                        </>
-                    ) : (
-                        <>
-                            <div className="visual-card main-card">
-                                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=60" alt="Photobooth portrait" />
-                            </div>
-                            <div className="visual-card floating-card card-1">
-                                <img src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=400&auto=format&fit=crop&q=60" alt="Fun moment" />
-                            </div>
-                            <div className="visual-card floating-card card-2">
-                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=60" alt="Stylish portrait" />
-                            </div>
                         </>
                     )}
                 </div>

@@ -37,9 +37,8 @@ export default function StyleSelection() {
                 setTemplates(list);
             } catch (err) {
                 console.error('Failed to fetch templates:', err);
-                setError('Gagal memuat template. Menggunakan template bawaan.');
-                // Fallback to local templates
-                setTemplates(LOCAL_FALLBACK_TEMPLATES);
+                setError('Gagal memuat template dari server.');
+                setTemplates([]);
             } finally {
                 setLoading(false);
             }
@@ -187,15 +186,3 @@ function TemplateCard({ template, layoutCount, isSelected, onClick }) {
         </div>
     );
 }
-
-/** Local fallback templates matching the DB schema structure */
-const LOCAL_FALLBACK_TEMPLATES = [
-    { id: 'local-1', name: 'CLASSIC WHITE', category: 'classic', background_color: '#ffffff', text_color: '#2d3436', border_style: 'solid', is_premium: false },
-    { id: 'local-2', name: 'CHARCOAL', category: 'modern', background_color: '#2d3436', text_color: 'rgba(255,255,255,0.8)', is_premium: false },
-    { id: 'local-3', name: 'VINTAGE FILM', category: 'vintage', className: 'theme-film', background_color: '#1a1a1a', text_color: '#ffffff', is_premium: false },
-    { id: 'local-4', name: 'POP ART LOVE', category: 'party', className: 'theme-pop', background_color: '#48dbfb', text_color: '#000', is_premium: false },
-    { id: 'local-5', name: 'GREEN PICNIC', category: 'classic', className: 'theme-picnic', background_color: '#e3f2fd', text_color: '#2e7d32', is_premium: false },
-    { id: 'local-6', name: 'BIRTHDAY PARTY', category: 'party', className: 'theme-birthday', background_color: '#fff3cd', text_color: '#d35400', is_premium: false },
-    { id: 'local-7', name: 'SKA CHECKER', category: 'modern', className: 'theme-checker', background_color: '#fff', text_color: '#000', is_premium: false },
-    { id: 'local-8', name: 'NEON NIGHTS', category: 'modern', className: 'theme-neon', background_color: '#000', text_color: '#00ff00', is_premium: false },
-];
