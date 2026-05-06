@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '../../lib/utils';
+import { Search } from 'lucide-react';
 
 /**
  * Reusable FormField component — label + input wrapper with error support
@@ -92,29 +93,15 @@ export const EmptyState = ({ icon: Icon, title, description, action }) => (
 );
 
 /**
- * Stat card - mini card for showing metrics
- */
-export const StatCard = ({ title, value, icon: Icon, iconColor = 'text-muted-foreground', trend, className }) => (
-  <div className={cn('rounded-xl border bg-card p-6', className)}>
-    <div className="flex items-center justify-between space-y-0 pb-2">
-      <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      {Icon && <Icon className={cn('h-4 w-4', iconColor)} />}
-    </div>
-    <div className="text-2xl font-bold">{value}</div>
-    {trend && <p className="text-xs text-muted-foreground mt-1">{trend}</p>}
-  </div>
-);
-
-/**
- * Page header component
+ * Page Header component
  */
 export const PageHeader = ({ title, description, action, className }) => (
-  <div className={cn('flex items-center justify-between', className)}>
-    <div>
+  <div className={cn('flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between', className)}>
+    <div className="space-y-1">
       <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-      {description && <p className="mt-1 text-muted-foreground">{description}</p>}
+      {description && <p className="text-muted-foreground">{description}</p>}
     </div>
-    {action && <div>{action}</div>}
+    {action && <div className="flex items-center gap-2">{action}</div>}
   </div>
 );
 
@@ -151,7 +138,6 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, className })
 /**
  * Search bar component
  */
-import { Search } from 'lucide-react';
 export const SearchBar = ({ value, onChange, onSearch, placeholder = 'Search...', className }) => (
   <div className={cn('relative', className)}>
     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -166,6 +152,21 @@ export const SearchBar = ({ value, onChange, onSearch, placeholder = 'Search...'
   </div>
 );
 
-export { default as Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose } from './Drawer';
+export * from './Drawer';
 export { default as Separator } from './Separator';
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
+export * from './Tabs';
+export * from './Table';
+export * from './Badge';
+export * from './Button';
+export * from './Card';
+export * from './Input';
+export * from './Checkbox';
+export * from './Select';
+export * from './Avatar';
+export * from './ConfirmDialog';
+export * from './DropdownMenu';
+export * from './Modal';
+export * from './Toast';
+
+
+

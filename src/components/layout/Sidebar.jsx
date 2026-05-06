@@ -12,26 +12,29 @@ import {
   Users,
   ChevronDown,
   ChevronRight,
+  User,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { Button, Separator } from '../ui';
+
 
 const NAV_ITEMS = [
-  { type: 'section', key: 's1', label: 'General' },
+  { type: 'label', label: 'General' },
   {
     key: 'dashboard',
     icon: LayoutDashboard,
     label: 'Dashboard',
     path: '/admin',
   },
-  { type: 'section', key: 's2', label: 'Management' },
+  { type: 'label', label: 'Management' },
   { key: 'users',     icon: Users,         label: 'Users',       path: '/admin/users' },
   { key: 'photos',    icon: Image,          label: 'Photos',      path: '/admin/photos' },
   { key: 'templates', icon: FileText,        label: 'Templates',   path: '/admin/templates' },
   { key: 'sessions',  icon: Camera,          label: 'Sessions',    path: '/admin/sessions' },
-  { type: 'section', key: 's3', label: 'Finance' },
+  { type: 'label', label: 'Finance' },
   { key: 'payments',  icon: CreditCard,      label: 'Payments',    path: '/admin/payments' },
   { key: 'promos',    icon: Tag,             label: 'Promo Codes', path: '/admin/promos' },
-  { type: 'section', key: 's4', label: 'System' },
+  { type: 'label', label: 'System' },
   {
     key: 'settings',
     icon: Settings,
@@ -69,28 +72,30 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r-[3px] border-black bg-white">
-      {/* Logo */}
-      <div className="flex h-16 items-center border-b-[3px] border-black px-4 gap-3 flex-shrink-0 bg-[var(--neo-yellow)]">
-        <div className="flex h-10 w-10 items-center justify-center border-[3px] border-black bg-black neo-shadow">
-          <Camera className="h-6 w-6 text-white" />
+    <div className="flex h-screen w-64 flex-col border-r bg-muted/30">
+      {/* Brand */}
+      <div className="flex h-16 items-center px-6 gap-3 flex-shrink-0">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Camera className="h-5 w-5 text-primary-foreground" />
         </div>
-        <div>
-          <div className="text-lg font-black uppercase tracking-tighter leading-none">PhotoBooth</div>
-          <div className="text-[10px] font-bold uppercase opacity-70">Admin Panel</div>
+        <div className="flex flex-col">
+          <span className="text-sm font-bold tracking-tight">PhotoBooth</span>
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Admin Panel</span>
         </div>
       </div>
 
+      <Separator />
+
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-2">
-          {NAV_ITEMS.map((item) => {
-            if (item.type === 'section') {
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="space-y-1">
+          {NAV_ITEMS.map((item, idx) => {
+            if (item.type === 'label') {
               return (
-                <div key={item.key} className="px-1 pb-1 pt-4 first:pt-0">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                <div key={`label-${idx}`} className="px-3 py-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                     {item.label}
-                  </div>
+                  </span>
                 </div>
               );
             }
@@ -100,80 +105,83 @@ const Sidebar = () => {
             const expanded = expandedMenus.includes(item.key);
             const hasSubmenu = item.submenu?.length > 0;
 
-            return (
-              <div key={item.key}>
-                {hasSubmenu ? (
+            if (hasSubmenu) {
+              return (
+                <div key={item.key} className="space-y-1">
                   <button
                     onClick={() => toggleMenu(item.key)}
                     className={cn(
-                      'flex w-full items-center justify-between border-[3px] border-black px-3 py-2.5 text-sm font-black uppercase transition-all',
-                      active
-                        ? 'bg-[var(--neo-cyan)] neo-shadow'
-                        : 'bg-white hover:bg-[var(--neo-cyan)]/20'
+                      "group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                      active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-4 w-4" />
                       {item.label}
                     </div>
-                    {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </button>
-                ) : (
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      'flex items-center gap-3 border-[3px] border-black px-3 py-2.5 text-sm font-black uppercase transition-all',
-                      active
-                        ? 'bg-[var(--neo-green)] neo-shadow'
-                        : 'bg-white hover:bg-[var(--neo-green)]/20'
+                    {expanded ? (
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 opacity-50" />
                     )}
-                  >
-                    <Icon className="h-5 w-5" />
-                    {item.label}
-                  </Link>
-                )}
+                  </button>
+                  {expanded && (
+                    <div className="ml-4 space-y-1 border-l pl-2">
+                      {item.submenu.map((sub) => (
+                        <Link
+                          key={sub.path}
+                          to={sub.path}
+                          className={cn(
+                            "block rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                            location.pathname === sub.path 
+                              ? "bg-accent text-accent-foreground" 
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
-                {/* Submenu */}
-                {hasSubmenu && expanded && (
-                  <div className="ml-4 mt-2 space-y-2 border-l-[3px] border-black pl-3">
-                    {item.submenu.map((sub) => (
-                      <Link
-                        key={sub.path}
-                        to={sub.path}
-                        className={cn(
-                          'block border-[3px] border-black px-3 py-1.5 text-xs font-bold uppercase transition-all',
-                          location.pathname === sub.path
-                            ? 'bg-[var(--neo-cyan)] neo-shadow'
-                            : 'bg-white hover:bg-[var(--neo-cyan)]/10'
-                        )}
-                      >
-                        {sub.label}
-                      </Link>
-                    ))}
-                  </div>
+            return (
+              <Link
+                key={item.key}
+                to={item.path}
+                className={cn(
+                  "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                  active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
                 )}
-              </div>
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
             );
           })}
         </div>
       </nav>
 
-      {/* User Profile */}
-      <div className="border-t-[3px] border-black p-4 flex-shrink-0 bg-[var(--neo-pink)]">
-        <div className="flex items-center gap-3 border-[3px] border-black bg-white p-2 neo-shadow">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-[3px] border-black bg-black text-white text-sm font-black">
-            {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+      {/* User Footer */}
+      <div className="mt-auto border-t p-4">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <User className="h-4 w-4" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-black uppercase truncate">{user?.name || 'Admin'}</div>
-            <div className="text-[10px] font-bold opacity-70 truncate">{user?.email || 'admin@photobooth.com'}</div>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <span className="truncate text-xs font-semibold">{user?.name || 'Admin'}</span>
+            <span className="truncate text-[10px] text-muted-foreground">{user?.email || 'admin@photobooth.com'}</span>
           </div>
-          <button
+          <Button 
+            variant="ghost" 
+            size="icon" 
             onClick={handleLogout}
-            className="border-[2px] border-black bg-white p-1.5 hover:bg-black hover:text-white transition-colors"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

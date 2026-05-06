@@ -4,21 +4,16 @@ import {
   Columns2, Info, Calendar, Percent, RefreshCw, Activity,
   Users, BarChart3, Clock, Edit, ToggleLeft, ToggleRight, Eye, ChevronRight
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import Input from '../../components/ui/Input';
-import Checkbox from '../../components/ui/Checkbox';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import {
+  Card, CardContent, CardHeader, CardTitle,
+  Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
+  Button, Badge, Input, Checkbox, ConfirmDialog,
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  PageHeader, Pagination, SearchBar, EmptyState, Spinner, Separator, FormField, Textarea, Switch
-} from '../../components/ui/index.jsx';
-import {
+  Pagination, SearchBar, EmptyState, Spinner, Separator, FormField, Textarea, Switch,
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
-} from '../../components/ui/DropdownMenu';
+} from '../../components/ui';
+
 import { adminAPI } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { formatDateTime, formatDate } from '../../lib/utils';

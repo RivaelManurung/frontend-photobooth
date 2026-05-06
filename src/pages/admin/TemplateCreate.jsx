@@ -5,16 +5,16 @@ import {
   Maximize, Info, ChevronRight, Layout, Image as ImageIcon, 
   MousePointer2, Layers, Sliders, CheckCircle2
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { 
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
   PageHeader, FormField, Textarea, Spinner, Separator,
-  Tabs, TabsList, TabsTrigger, TabsContent
-} from '../../components/ui/index.jsx';
+  Tabs, TabsList, TabsTrigger, TabsContent,
+  Button, Input, Badge
+} from '../../components/ui';
 import { adminAPI, getImageUrl } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import Badge from '../../components/ui/Badge';
+
+
 import DraggablePhotoZone from '../../components/DraggablePhotoZone';
 
 const TemplateCreate = () => {

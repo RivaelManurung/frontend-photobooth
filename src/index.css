@@ -5,100 +5,92 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    
-    /* Neo Brutalism Colors */
-    --neo-yellow: #FFBD00;
-    --neo-green: #A3E635;
-    --neo-pink: #F472B6;
-    --neo-cyan: #22D3EE;
-    --neo-white: #FFFFFF;
-    --neo-black: #000000;
-    
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
-    
-    --border: 0 0% 0%;
-    --input: 0 0% 0%;
-    --ring: 0 0% 0%;
-    
-    --radius: 0px; /* Neo brutalism usually uses sharp corners or very subtle ones */
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 240 5.9% 10%;
   }
 
   .dark {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 100%;
-    --neo-white: #1a1a1a;
-    --neo-black: #ffffff;
-    --border: 0 0% 100%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 240 4.9% 83.9%;
   }
+
 }
 
 @layer base {
   * {
-    @apply border-black;
+    @apply border-border;
   }
   body {
-    @apply bg-white text-black;
-    font-family: 'Lexend', 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-}
-
-@layer utilities {
-  /* Neo Brutalism Core Utilities */
-  .neo-border {
-    @apply border-[3px] border-black;
-  }
-  
-  .neo-shadow {
-    box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
-  }
-
-  .neo-shadow-lg {
-    box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
-  }
-
-  .neo-shadow-hover {
-    @apply transition-all duration-200;
-  }
-  
-  .neo-shadow-hover:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
-  }
-
-  .neo-shadow-active:active {
-    transform: translate(2px, 2px);
-    box-shadow: 0px 0px 0px 0px rgba(0,0,0,1);
-  }
-
-  /* Specific Component Styles */
-  .neo-card {
-    @apply bg-white neo-border neo-shadow p-6;
-  }
-
-  .neo-btn {
-    @apply neo-border neo-shadow neo-shadow-hover neo-shadow-active px-6 py-3 font-bold uppercase tracking-wider bg-white;
-  }
-
-  .neo-btn-primary {
-    @apply neo-btn bg-[var(--neo-yellow)];
-  }
-
-  .neo-btn-success {
-    @apply neo-btn bg-[var(--neo-green)];
-  }
-
-  .neo-btn-danger {
-    @apply neo-btn bg-[var(--neo-pink)];
-  }
-
-  .neo-input {
-    @apply neo-border px-4 py-2 focus:outline-none focus:bg-[var(--neo-cyan)]/10 transition-colors;
-  }
-
-  .glass {
-    @apply bg-white neo-border neo-shadow;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

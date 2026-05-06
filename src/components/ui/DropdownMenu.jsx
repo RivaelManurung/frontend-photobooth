@@ -31,11 +31,12 @@ const DropdownMenu = ({ children }) => {
   );
 };
 
-export const DropdownMenuTrigger = React.forwardRef(({ children, className, onClick, ...props }, ref) => (
+export const DropdownMenuTrigger = React.forwardRef(({ children, className, onClick, asChild, ...props }, ref) => (
   <div ref={ref} className={cn("cursor-pointer", className)} onClick={onClick} {...props}>
     {children}
   </div>
 ));
+
 DropdownMenuTrigger.displayName = "DropdownMenuTrigger";
 
 export const DropdownMenuContent = ({ children, className, align = "right" }) => (

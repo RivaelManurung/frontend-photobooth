@@ -1,20 +1,30 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './components/ui/Toast';
 import { PhotoboothProvider } from './context/PhotoboothContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Layouts
+
 import AdminLayout from './components/layout/AdminLayout';
 
 // Admin Pages
 import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import Photos from './pages/admin/Photos';
+import PhotoDetails from './pages/admin/PhotoDetails';
 import Templates from './pages/admin/Templates';
+import TemplateDetails from './pages/admin/TemplateDetails';
 import TemplateCreate from './pages/admin/TemplateCreate';
+
 import Payments from './pages/admin/Payments';
+import PaymentDetails from './pages/admin/PaymentDetails';
 import Promos from './pages/admin/Promos';
 import Sessions from './pages/admin/Sessions';
+import SessionDetails from './pages/admin/SessionDetails';
 import Settings from './pages/admin/Settings';
+
+import UserDetails from './pages/admin/UserDetails';
+
 
 // User Pages
 import Landing from './pages/user/Landing';
@@ -58,42 +68,53 @@ function UserFlow() {
 
 function App() {
   return (
-    <ToastProvider>
-      <PhotoboothProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Login */}
-            <Route path="/login" element={<Login />} />
+    <ThemeProvider>
+      <ToastProvider>
+        <PhotoboothProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Login */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminLayout />
-                </ProtectedAdminRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="users" element={<Users />} />
-              <Route path="photos" element={<Photos />} />
-              <Route path="templates" element={<Templates />} />
-              <Route path="templates/create" element={<TemplateCreate />} />
-              <Route path="templates/edit/:id" element={<TemplateCreate />} />
-              <Route path="payments" element={<Payments />} />
-              <Route path="promos" element={<Promos />} />
-              <Route path="sessions" element={<Sessions />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="settings/profile" element={<Settings />} />
-            </Route>
+              {/* Admin Routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminLayout />
+                  </ProtectedAdminRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="users" element={<Users />} />
+                <Route path="users/:id" element={<UserDetails />} />
+                <Route path="photos" element={<Photos />} />
+                <Route path="photos/:id" element={<PhotoDetails />} />
 
-            {/* User Routes */}
-            <Route path="/*" element={<UserFlow />} />
-          </Routes>
-        </BrowserRouter>
-      </PhotoboothProvider>
-    </ToastProvider>
+                <Route path="templates" element={<Templates />} />
+                <Route path="templates/:id" element={<TemplateDetails />} />
+                <Route path="templates/create" element={<TemplateCreate />} />
+                <Route path="templates/edit/:id" element={<TemplateCreate />} />
+
+                <Route path="payments" element={<Payments />} />
+                <Route path="payments/:id" element={<PaymentDetails />} />
+                <Route path="promos" element={<Promos />} />
+                <Route path="sessions" element={<Sessions />} />
+                <Route path="sessions/:id" element={<SessionDetails />} />
+
+                <Route path="settings" element={<Settings />} />
+                <Route path="settings/profile" element={<Settings />} />
+              </Route>
+
+              {/* User Routes */}
+              <Route path="/*" element={<UserFlow />} />
+            </Routes>
+          </BrowserRouter>
+        </PhotoboothProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
+
 
 export default App;

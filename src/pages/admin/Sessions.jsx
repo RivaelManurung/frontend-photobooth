@@ -1,23 +1,21 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Clock, Play, CheckCircle, XCircle, Trash2, Search, Filter, 
   Columns2, Info, Calendar, User, Image as ImageIcon,
   CheckSquare, Square, RefreshCw, StopCircle, Camera, Activity
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import Checkbox from '../../components/ui/Checkbox';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import {
+  Card, CardContent, CardHeader, CardTitle,
+  Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
+  Button, Badge, Checkbox, ConfirmDialog,
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  PageHeader, Pagination, SearchBar, EmptyState, Spinner, Separator
-} from '../../components/ui/index.jsx';
-import {
+  Pagination, SearchBar, EmptyState, Spinner, Separator,
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
-} from '../../components/ui/DropdownMenu';
+} from '../../components/ui';
+
 import { adminAPI } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { formatDateTime } from '../../lib/utils';
@@ -30,7 +28,9 @@ const STATUS_COLORS = {
 };
 
 const Sessions = () => {
+  const navigate = useNavigate();
   const { addToast } = useToast();
+
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -51,7 +51,7 @@ const Sessions = () => {
   });
 
   // Drawer state
-  const [selectedSession, setSelectedSession] = useState(null);
+
 
   // Dialogs
   const [endDialog, setEndDialog] = useState({ open: false, session: null, loading: false });
@@ -204,7 +204,7 @@ const Sessions = () => {
                 <EmptyState icon={Clock} title="No sessions found" description="No session data matches your criteria." />
               ) : (
                 <div className="rounded-xl border bg-card overflow-hidden">
-                  <Table>
+                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
                         <TableHead className="w-10">
@@ -225,7 +225,7 @@ const Sessions = () => {
                           <TableCell><Checkbox checked={selectedIds.includes(session.id)} onClick={() => toggleSelect(session.id)} /></TableCell>
                           {columnVisibility.id && <TableCell className="font-mono text-sm font-bold text-primary">#{session.id}</TableCell>}
                           {columnVisibility.user && (
-                            <TableCell className="text-sm cursor-pointer" onClick={() => setSelectedSession(session)}>
+                            <TableCell className="text-sm cursor-pointer" onClick={() => navigate(`/admin/sessions/${session.id}`)}>
                               User {session.user_id}
                             </TableCell>
                           )}
@@ -241,7 +241,7 @@ const Sessions = () => {
                           {columnVisibility.created && <TableCell className="text-xs text-muted-foreground">{formatDateTime(session.created_at)}</TableCell>}
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedSession(session)}><Info className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/sessions/${session.id}`)}><Info className="h-4 w-4" /></Button>
                               {session.status === 'active' && (
                                 <Button 
                                   variant="ghost" 
@@ -262,6 +262,7 @@ const Sessions = () => {
                 </div>
               )}
 
+
               <div className="mt-6 flex items-center justify-between px-2">
                 <div className="text-sm text-muted-foreground">
                   {selectedIds.length} of {filteredSessions.length} selected
@@ -273,85 +274,7 @@ const Sessions = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ── Session Detail Drawer ── */}
-      <Drawer isOpen={!!selectedSession} onClose={() => setSelectedSession(null)}>
-        <DrawerHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10 text-primary">
-              <Activity className="h-5 w-5" />
-            </div>
-            <div>
-              <DrawerTitle>Session Analysis</DrawerTitle>
-              <DrawerDescription>Internal ID: #{selectedSession?.id}</DrawerDescription>
-            </div>
-          </div>
-        </DrawerHeader>
 
-        <DrawerContent className="space-y-6">
-          <div className="p-4 rounded-xl border bg-muted/30 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase text-muted-foreground">Current Status</span>
-              <Badge variant={STATUS_COLORS[selectedSession?.status] || 'secondary'}>{selectedSession?.status}</Badge>
-            </div>
-            <Separator />
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground flex items-center"><User className="h-3.5 w-3.5 mr-2" /> User ID</span>
-                <span className="font-medium">{selectedSession?.user_id}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground flex items-center"><ImageIcon className="h-3.5 w-3.5 mr-2" /> Template</span>
-                <span className="font-medium">{selectedSession?.template_id}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground flex items-center"><Clock className="h-3.5 w-3.5 mr-2" /> Duration</span>
-                <span className="font-medium">{durationText(selectedSession)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase text-muted-foreground">Session Timeline</h4>
-            <div className="relative pl-6 space-y-4 before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-muted">
-              <div className="relative">
-                <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-primary bg-background" />
-                <div className="text-xs font-medium">Session Started</div>
-                <div className="text-[10px] text-muted-foreground">{formatDateTime(selectedSession?.created_at)}</div>
-              </div>
-              {(selectedSession?.ended_at || selectedSession?.completed_at) && (
-                <div className="relative">
-                  <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-green-500 bg-background" />
-                  <div className="text-xs font-medium">Session Completed</div>
-                  <div className="text-[10px] text-muted-foreground">{formatDateTime(selectedSession?.ended_at || selectedSession?.completed_at)}</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-sm text-blue-700">
-              <Info className="h-4 w-4" />
-              Live Context
-            </div>
-            <p className="text-xs text-blue-600/80 leading-relaxed">
-              Sesi ini aktif di Booth #01. User sedang berada di tahap pemrosesan filter gambar. Estimasi waktu selesai: 2 menit lagi.
-            </p>
-          </div>
-        </DrawerContent>
-
-        <DrawerFooter>
-          {selectedSession?.status === 'active' && (
-            <Button variant="outline" className="flex-1" onClick={() => setEndDialog({ open: true, session: selectedSession, loading: false })}>
-              <StopCircle className="h-4 w-4 mr-2 text-orange-500" /> End Session
-            </Button>
-          )}
-          <Button variant="destructive" onClick={() => { setSelectedIds([selectedSession.id]); setBulkDeleteDialog({ open: true, loading: false }); }}>
-            <Trash2 className="h-4 w-4 mr-2" /> Delete
-          </Button>
-        </DrawerFooter>
-      </Drawer>
 
       <ConfirmDialog
         isOpen={endDialog.open}

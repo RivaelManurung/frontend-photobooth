@@ -1,23 +1,21 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import {
   CreditCard, Search, Download, Filter, MoreVertical, Trash2, 
   CheckSquare, Square, Columns2, Info, Calendar, User,
   DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw, FileText, Activity
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import Checkbox from '../../components/ui/Checkbox';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import {
+  Card, CardContent, CardHeader, CardTitle,
+  Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
+  Button, Badge, Checkbox, ConfirmDialog,
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  PageHeader, Pagination, SearchBar, EmptyState, Spinner, Separator
-} from '../../components/ui/index.jsx';
-import {
+  Pagination, SearchBar, EmptyState, Spinner, Separator,
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
-} from '../../components/ui/DropdownMenu';
+} from '../../components/ui';
+
 import { adminAPI } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { formatDateTime, formatCurrency } from '../../lib/utils';
@@ -32,7 +30,9 @@ const STATUS_VARIANT = {
 };
 
 const Payments = () => {
+  const navigate = useNavigate();
   const { addToast } = useToast();
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -54,7 +54,7 @@ const Payments = () => {
   });
 
   // Drawer state
-  const [selectedOrder, setSelectedOrder] = useState(null);
+
 
   // Dialogs
   const [bulkDeleteDialog, setBulkDeleteDialog] = useState({ open: false, loading: false });
@@ -209,7 +209,7 @@ const Payments = () => {
                           <TableCell><Checkbox checked={selectedIds.includes(order.id)} onClick={() => toggleSelect(order.id)} /></TableCell>
                           {columnVisibility.id && <TableCell className="font-mono text-sm font-bold text-primary">#{order.id}</TableCell>}
                           {columnVisibility.user && (
-                            <TableCell className="text-sm cursor-pointer" onClick={() => setSelectedOrder(order)}>
+                            <TableCell className="text-sm cursor-pointer" onClick={() => navigate(`/admin/payments/${order.id}`)}>
                               User {order.user_id}
                             </TableCell>
                           )}
@@ -225,13 +225,14 @@ const Payments = () => {
                           {columnVisibility.date && <TableCell className="text-xs text-muted-foreground">{formatDateTime(order.created_at)}</TableCell>}
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrder(order)}><Info className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/payments/${order.id}`)}><Info className="h-4 w-4" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setSelectedIds([order.id]); setBulkDeleteDialog({ open: true, loading: false }); }}><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
+
                   </Table>
                 </div>
               )}
@@ -247,84 +248,7 @@ const Payments = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ── Payment Detail Drawer ── */}
-      <Drawer isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)}>
-        <DrawerHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-green-100 text-green-700">
-              <DollarSign className="h-5 w-5" />
-            </div>
-            <div>
-              <DrawerTitle>Transaction Details</DrawerTitle>
-              <DrawerDescription>Internal Order: #{selectedOrder?.id}</DrawerDescription>
-            </div>
-          </div>
-        </DrawerHeader>
 
-        <DrawerContent className="space-y-6">
-          <div className="p-6 rounded-2xl border bg-gradient-to-br from-muted/50 to-muted/20 space-y-4 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Amount Paid</span>
-            <div className="text-3xl font-bold text-primary">{formatCurrency(selectedOrder?.amount || selectedOrder?.total_amount || 0)}</div>
-            <Badge variant={STATUS_VARIANT[selectedOrder?.status] || 'secondary'} className="px-3 py-1">
-              {selectedOrder?.status}
-            </Badge>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground flex items-center"><User className="h-3.5 w-3.5 mr-2" /> Customer</span>
-              <span className="font-medium">User #{selectedOrder?.user_id}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground flex items-center"><CreditCard className="h-3.5 w-3.5 mr-2" /> Method</span>
-              <span className="font-medium uppercase">{selectedOrder?.payment_method || 'QRIS'}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground flex items-center"><Calendar className="h-3.5 w-3.5 mr-2" /> Date</span>
-              <span className="font-medium">{formatDateTime(selectedOrder?.created_at)}</span>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase text-muted-foreground">Financial Context</h4>
-            <div className="p-4 rounded-xl border bg-muted/20 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                Plan: {selectedOrder?.subscription_plan || selectedOrder?.plan || 'Standard'}
-              </div>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Transaksi ini telah diproses melalui gateway Midtrans. Status dana saat ini: <b>Settled</b>. Pendapatan ini akan masuk ke laporan bulanan {new Date(selectedOrder?.created_at).toLocaleString('default', { month: 'long' })}.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50 space-y-3">
-            <div className="flex items-center gap-2 font-semibold text-sm text-blue-700">
-              <Activity className="h-4 w-4" />
-              Real-time Stats
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] text-blue-600/60 uppercase font-bold">Total Revenue</p>
-                <p className="text-sm font-bold text-blue-800">{formatCurrency(stats.total_revenue || 0)}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-blue-600/60 uppercase font-bold">Monthly Target</p>
-                <p className="text-sm font-bold text-blue-800">{formatCurrency(stats.monthly_revenue || 0)}</p>
-              </div>
-            </div>
-          </div>
-        </DrawerContent>
-
-        <DrawerFooter>
-          <Button variant="outline" className="flex-1" onClick={() => setSelectedOrder(null)}>Close</Button>
-          <Button variant="destructive" onClick={() => { setSelectedIds([selectedOrder.id]); setBulkDeleteDialog({ open: true, loading: false }); }}>
-            <Trash2 className="h-4 w-4 mr-2" /> Void Transaction
-          </Button>
-        </DrawerFooter>
-      </Drawer>
 
       <ConfirmDialog
         isOpen={bulkDeleteDialog.open}

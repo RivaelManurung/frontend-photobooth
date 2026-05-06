@@ -5,20 +5,16 @@ import {
   Search, Columns2, Info, RefreshCw, Activity,
   Image as ImageIcon, RectangleHorizontal, CheckSquare, Square, ChevronRight, BarChart3
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import Checkbox from '../../components/ui/Checkbox';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import {
+  Card, CardContent, CardHeader, CardTitle,
+  Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
+  Button, Badge, Checkbox, ConfirmDialog,
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  PageHeader, Pagination, SearchBar, EmptyState, Spinner, Separator
-} from '../../components/ui/index.jsx';
-import {
+  Pagination, SearchBar, EmptyState, Spinner, Separator,
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
-} from '../../components/ui/DropdownMenu';
+} from '../../components/ui';
+
 import { adminAPI, getImageUrl } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { formatDateTime } from '../../lib/utils';
@@ -44,8 +40,7 @@ const Templates = () => {
     status: true,
   });
 
-  // Drawer state
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
 
   // Dialogs
   const [bulkDeleteDialog, setBulkDeleteDialog] = useState({ open: false, loading: false });
@@ -215,7 +210,7 @@ const Templates = () => {
                           <TableCell><Checkbox checked={selectedIds.includes(template.id)} onClick={() => toggleSelect(template.id)} /></TableCell>
                           {columnVisibility.preview && (
                             <TableCell>
-                              <div className="w-12 h-12 rounded-lg overflow-hidden border bg-muted group relative cursor-pointer" onClick={() => setSelectedTemplate(template)}>
+                              <div className="w-12 h-12 rounded-lg overflow-hidden border bg-muted group relative cursor-pointer" onClick={() => navigate(`/admin/templates/${template.id}`)}>
                                 <img 
                                   src={getImageUrl(template.preview_url || template.thumbnail_url)} 
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
@@ -230,7 +225,7 @@ const Templates = () => {
                           {columnVisibility.name && (
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="font-bold text-sm text-primary cursor-pointer hover:underline" onClick={() => setSelectedTemplate(template)}>
+                                <span className="font-bold text-sm text-primary cursor-pointer hover:underline" onClick={() => navigate(`/admin/templates/${template.id}`)}>
                                   {template.name}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">{template.description}</span>
@@ -260,7 +255,7 @@ const Templates = () => {
                           )}
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedTemplate(template)}><Info className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/templates/${template.id}`)}><Info className="h-4 w-4" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/templates/edit/${template.id}`)}><Edit className="h-4 w-4" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setSelectedIds([template.id]); setBulkDeleteDialog({ open: true, loading: false }); }}><Trash2 className="h-4 w-4" /></Button>
                             </div>
@@ -268,6 +263,7 @@ const Templates = () => {
                         </TableRow>
                       ))}
                     </TableBody>
+
                   </Table>
                 </div>
               )}
@@ -283,99 +279,7 @@ const Templates = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ── Template Detail Drawer ── */}
-      <Drawer isOpen={!!selectedTemplate} onClose={() => setSelectedTemplate(null)}>
-        <DrawerHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-blue-100 text-blue-700">
-              <ImageIcon className="h-5 w-5" />
-            </div>
-            <div>
-              <DrawerTitle>{selectedTemplate?.name}</DrawerTitle>
-              <DrawerDescription>ID: {selectedTemplate?.id}</DrawerDescription>
-            </div>
-          </div>
-        </DrawerHeader>
 
-        <DrawerContent className="space-y-6">
-          <div className="rounded-2xl border overflow-hidden bg-muted aspect-[3/4] relative group">
-            <img 
-              src={getImageUrl(selectedTemplate?.preview_url || selectedTemplate?.thumbnail_url)} 
-              className="w-full h-full object-cover" 
-              alt={selectedTemplate?.name}
-            />
-            <div className="absolute top-4 right-4 flex gap-2">
-              {selectedTemplate?.is_premium && <Badge variant="warning" className="shadow-lg">Premium</Badge>}
-              {selectedTemplate?.is_featured && <Badge variant="default" className="shadow-lg">Featured</Badge>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl border bg-muted/20 space-y-1">
-              <div className="flex items-center text-[10px] uppercase font-bold text-muted-foreground">
-                <BarChart3 className="h-3 w-3 mr-1.5" /> Total Usage
-              </div>
-              <p className="text-lg font-bold">{selectedTemplate?.usage_count || 0}</p>
-            </div>
-            <div className="p-4 rounded-xl border bg-muted/20 space-y-1">
-              <div className="flex items-center text-[10px] uppercase font-bold text-muted-foreground">
-                <RectangleHorizontal className="h-3 w-3 mr-1.5" /> Dimensions
-              </div>
-              <p className="text-sm font-bold">{selectedTemplate?.width} x {selectedTemplate?.height} px</p>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase text-muted-foreground">Template Configuration</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Layout Count</span>
-                <span className="font-bold">{selectedTemplate?.photo_count} photos</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Category</span>
-                <Badge variant="outline">{selectedTemplate?.category}</Badge>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Visibility</span>
-                <Badge variant={selectedTemplate?.is_active ? 'success' : 'secondary'}>{selectedTemplate?.is_active ? 'Public' : 'Hidden'}</Badge>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-sm text-blue-700">
-              <Activity className="h-4 w-4" />
-              Live Insights
-            </div>
-            <p className="text-xs text-blue-600/80 leading-relaxed">
-              Template ini memiliki tingkat retensi 24% lebih tinggi dibandingkan rata-rata kategori {selectedTemplate?.category}. Paling populer di kalangan pengguna umur 18-24.
-            </p>
-          </div>
-        </DrawerContent>
-
-        <DrawerFooter>
-          <div className="flex w-full gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => handleToggleStatus(selectedTemplate.id)}>
-              <Power className={`h-4 w-4 mr-2 ${selectedTemplate?.is_active ? 'text-red-500' : 'text-green-500'}`} />
-              {selectedTemplate?.is_active ? 'Deactivate' : 'Activate'}
-            </Button>
-            <Button variant="outline" onClick={() => handleDuplicate(selectedTemplate.id)}>
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button variant="destructive" onClick={() => { setSelectedIds([selectedTemplate.id]); setBulkDeleteDialog({ open: true, loading: false }); }}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button className="w-full" onClick={() => navigate(`/admin/templates/edit/${selectedTemplate.id}`)}>
-            <Edit className="h-4 w-4 mr-2" /> Edit Template
-          </Button>
-        </DrawerFooter>
-      </Drawer>
 
       <ConfirmDialog
         isOpen={bulkDeleteDialog.open}

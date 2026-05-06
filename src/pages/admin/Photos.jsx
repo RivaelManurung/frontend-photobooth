@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Image as ImageIcon, Trash2, Heart, Calendar,
   Grid, List, RefreshCw, Download, Eye, X, CheckSquare, Square,
@@ -6,25 +8,20 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import Select from '../../components/ui/Select';
-import Checkbox from '../../components/ui/Checkbox';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import {
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  PageHeader, Pagination, SearchBar, EmptyState, Spinner,
-  Separator
-} from '../../components/ui/index.jsx';
-import {
+  Pagination, SearchBar, EmptyState, Spinner,
+  Separator, Button, Badge, Select, Checkbox, ConfirmDialog,
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
-} from '../../components/ui/DropdownMenu';
+} from '../../components/ui';
+
 import { photoAPI, getImageUrl } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { formatDateTime } from '../../lib/utils';
 
 const Photos = () => {
+  const navigate = useNavigate();
   const { addToast } = useToast();
 
   const [photos, setPhotos]           = useState([]);
@@ -45,9 +42,6 @@ const Photos = () => {
     favorite: true,
     date: true,
   });
-
-  // Drawer state for details
-  const [detailPhoto, setDetailPhoto] = useState(null);
 
   // Delete confirm
   const [deleteDialog, setDeleteDialog] = useState({ open: false, photo: null, loading: false });
@@ -212,8 +206,8 @@ const Photos = () => {
                         <img
                           src={imgSrc(photo) || placeholder}
                           alt={`Photo #${photo.id}`}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          onClick={() => setDetailPhoto(photo)}
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105 cursor-pointer"
+                          onClick={() => navigate(`/admin/photos/${photo.id}`)}
                         />
                       </div>
                       
@@ -228,7 +222,7 @@ const Photos = () => {
                         </div>
                         <p className="text-[10px] text-muted-foreground truncate">User: {photo.user_id}</p>
                         <div className="mt-2 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailPhoto(photo)}><Info className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/admin/photos/${photo.id}`)}><Info className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownload(photo)}><Download className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteDialog({ open: true, photo, loading: false })}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
@@ -259,7 +253,7 @@ const Photos = () => {
                           <TableCell><Checkbox checked={selectedIds.includes(photo.id)} onClick={() => toggleSelect(photo.id)} /></TableCell>
                           {columnVisibility.preview && (
                             <TableCell>
-                              <div className="w-10 h-14 rounded overflow-hidden bg-muted cursor-pointer" onClick={() => setDetailPhoto(photo)}>
+                              <div className="w-10 h-14 rounded overflow-hidden bg-muted cursor-pointer" onClick={() => navigate(`/admin/photos/${photo.id}`)}>
                                 <img src={imgSrc(photo) || placeholder} alt="" className="w-full h-full object-cover" />
                               </div>
                             </TableCell>
@@ -275,7 +269,7 @@ const Photos = () => {
                           {columnVisibility.date && <TableCell className="text-xs text-muted-foreground">{formatDateTime(photo.created_at)}</TableCell>}
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDetailPhoto(photo)}><Eye className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/photos/${photo.id}`)}><Eye className="h-4 w-4" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteDialog({ open: true, photo, loading: false })}><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
@@ -285,6 +279,7 @@ const Photos = () => {
                   </Table>
                 </div>
               )}
+
 
               <div className="mt-6 flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
@@ -297,66 +292,7 @@ const Photos = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ── Detail Drawer ── */}
-      <Drawer isOpen={!!detailPhoto} onClose={() => setDetailPhoto(null)}>
-        <DrawerHeader>
-          <DrawerTitle className="flex items-center justify-between">
-            Detail Foto #{detailPhoto?.id}
-            {detailPhoto?.is_favorite && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
-          </DrawerTitle>
-          <DrawerDescription>Informasi lengkap dan preview aset foto</DrawerDescription>
-        </DrawerHeader>
-        
-        <DrawerContent className="space-y-6">
-          <div className="aspect-[3/4] w-full rounded-xl overflow-hidden border bg-muted shadow-inner">
-            <img src={imgSrc(detailPhoto) || placeholder} alt="" className="w-full h-full object-contain" />
-          </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">User ID</label>
-                <p className="text-sm font-medium">{detailPhoto?.user_id || 'Unknown'}</p>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Template</label>
-                <p className="text-sm font-medium">{detailPhoto?.template_name || 'Standard'}</p>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Created At</label>
-              <div className="flex items-center text-sm">
-                <Calendar className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                {formatDateTime(detailPhoto?.created_at)}
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                Quick Stats
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Foto ini telah di-download sebanyak 0 kali dan dilihat 12 kali. User menghabiskan rata-rata 45 detik untuk memilih gaya ini.
-              </p>
-            </div>
-          </div>
-        </DrawerContent>
-
-        <DrawerFooter>
-          <Button variant="outline" onClick={() => handleDownload(detailPhoto)} className="flex-1">
-            <Download className="h-4 w-4 mr-2" /> Download
-          </Button>
-          <Button variant="destructive" onClick={() => { setDeleteDialog({ open: true, photo: detailPhoto, loading: false }); }}>
-            <Trash2 className="h-4 w-4 mr-2" /> Hapus
-          </Button>
-        </DrawerFooter>
-      </Drawer>
 
       {/* ── Dialogs ── */}
       <ConfirmDialog

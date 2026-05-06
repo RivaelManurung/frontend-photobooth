@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Save, User, Lock, Settings2, Camera } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
-import { FormField, Textarea, Spinner, PageHeader } from '../../components/ui/index.jsx';
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle,
+  Button, Input, Tabs, TabsList, TabsTrigger, TabsContent,
+  FormField, Textarea, Spinner, PageHeader 
+} from '../../components/ui';
+
 import { authAPI } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 

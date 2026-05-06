@@ -1,33 +1,21 @@
 import React, { useEffect } from 'react';
-import Button from './Button';
-import '../../styles/ConfirmDialog.css';
+import { Button } from './Button';
+import { cn } from '../../lib/utils';
 
 /**
  * Reusable Confirmation Dialog component.
- * 
- * @param {Object} props
- * @param {boolean} props.isOpen - Whether the dialog is visible
- * @param {Function} props.onClose - Called when the user cancels or closes the dialog
- * @param {Function} props.onConfirm - Called when the user confirms the action
- * @param {string} props.title - The dialog title
- * @param {string} props.description - The dialog description text
- * @param {string} props.confirmText - Text for the confirm button
- * @param {string} props.cancelText - Text for the cancel button
- * @param {string} props.variant - Variant for the confirm button (default, destructive)
- * @param {boolean} props.isLoading - Whether the confirm action is in progress
  */
 const ConfirmDialog = ({
   isOpen,
   onClose,
   onConfirm,
-  title = "Konfirmasi Hapus",
-  description = "Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.",
-  confirmText = "Hapus",
-  cancelText = "Batal",
+  title = "Confirm Action",
+  description = "Are you sure you want to perform this action? This cannot be undone.",
+  confirmText = "Confirm",
+  cancelText = "Cancel",
   variant = "destructive",
   isLoading = false
 }) => {
-  // Prevent scrolling when dialog is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -42,17 +30,21 @@ const ConfirmDialog = ({
   if (!isOpen) return null;
 
   return (
-    <div className="confirm-dialog-overlay" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
-        className="confirm-dialog-content" 
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" 
+        onClick={onClose}
+      />
+      <div 
+        className="relative w-full max-w-md rounded-lg border bg-background p-6 shadow-lg animate-in zoom-in-95 duration-300" 
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="confirm-dialog-header">
-          <h3 className="confirm-dialog-title">{title}</h3>
-          <p className="confirm-dialog-description">{description}</p>
+        <div className="space-y-2 text-center sm:text-left">
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         
-        <div className="confirm-dialog-footer">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button 
             variant="outline" 
             onClick={onClose}
@@ -80,4 +72,6 @@ const ConfirmDialog = ({
   );
 };
 
+export { ConfirmDialog };
 export default ConfirmDialog;
+

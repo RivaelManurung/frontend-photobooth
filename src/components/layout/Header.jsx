@@ -1,9 +1,11 @@
-import { Bell, Search, Calendar, Download } from 'lucide-react';
+import { Bell, Search, Settings, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import Button from '../ui/Button';
+import { Button, Input } from '../ui';
+import { useTheme } from '../../context/ThemeContext';
 
 const Header = ({ title = "Dashboard", showActions = true }) => {
   const [user, setUser] = useState(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -13,37 +15,39 @@ const Header = ({ title = "Dashboard", showActions = true }) => {
   }, []);
 
   return (
-    <header className="flex h-16 items-center justify-between border-b-[3px] border-black bg-white px-6">
-      {/* Left Section - Title & Search */}
-      <div className="flex flex-1 items-center gap-4">
-        <h1 className="text-2xl font-black uppercase tracking-tighter">{title}</h1>
-        
-        <div className="relative ml-8 w-96">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-black" />
-          <input
-            type="text"
-            placeholder="SEARCH ANYTHING..."
-            className="h-10 w-full border-[3px] border-black bg-white pl-10 pr-4 text-xs font-bold uppercase focus:bg-[var(--neo-yellow)] focus:outline-none neo-shadow-sm transition-all"
+    <header className="sticky top-0 z-10 flex h-16 w-full items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Left Section - Title */}
+      <div className="flex items-center gap-4">
+        <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
+      </div>
+
+      {/* Center Section - Search (Optional) */}
+      <div className="hidden flex-1 items-center justify-center px-6 md:flex">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            className="h-9 w-full bg-muted/50 pl-9"
           />
         </div>
       </div>
 
       {/* Right Section - Actions */}
-      {showActions && (
-        <div className="flex items-center gap-4">
-          <Button className="neo-btn-primary h-10 px-4 text-xs font-black">
-            <Download className="mr-2 h-4 w-4" />
-            EXPORT
-          </Button>
-          
-          <button className="relative border-[3px] border-black bg-white p-2 neo-shadow hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-[-4px] top-[-4px] h-4 w-4 border-[2px] border-black bg-[var(--neo-pink)] text-[10px] font-black flex items-center justify-center">2</span>
-          </button>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={toggleTheme} title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}>
+          {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
+        </Button>
+        <Button variant="ghost" size="icon">
+          <Settings className="h-5 w-5" />
+        </Button>
+      </div>
     </header>
   );
 };
+
 
 export default Header;
