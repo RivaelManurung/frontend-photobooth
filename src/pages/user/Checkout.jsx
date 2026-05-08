@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CreditCard, ShieldCheck, Loader2, CheckCircle2, ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
+import UserNavbar from '../../components/layout/UserNavbar';
 import '../../styles/LandingPage.css';
 
 const PACKAGES = {
@@ -52,17 +53,7 @@ export default function Checkout() {
 
     return (
         <div className="landing-container bg-neo-stone">
-            <header className="brutal-nav">
-                <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
-                    <h1 className="logo-text">SNAP!</h1>
-                </div>
-                <div className="nav-links-center">
-                    <span className="font-black uppercase tracking-widest text-xl italic">SECURE CHECKOUT</span>
-                </div>
-                <div className="nav-cta bg-neo-pink">
-                    <ShieldCheck size={24} /> <span>ENCRYPTED</span>
-                </div>
-            </header>
+            <UserNavbar />
 
             <main className="brutal-main flex flex-col lg:flex-row gap-12 mt-12">
                 {/* Left: Payment Form */}

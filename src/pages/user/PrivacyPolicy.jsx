@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, ArrowLeft, Camera, ArrowUpRight } from 'lucide-react';
+import UserNavbar from '../../components/layout/UserNavbar';
 import '../../styles/LandingPage.css';
 
 const PrivacyPolicy = () => {
@@ -9,23 +10,7 @@ const PrivacyPolicy = () => {
   return (
     <div className="landing-container">
       {/* --- HEADER --- */}
-      <header className="brutal-nav">
-          <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
-              <h1 className="logo-text">SNAP!</h1>
-              <span className="logo-subtext">PHOTOBOOTH</span>
-          </div>
-          
-          <div className="nav-links-center">
-              <button className="nav-link-btn" onClick={() => navigate('/')}>HOME</button>
-              <button className="nav-link-btn" onClick={() => navigate('/layout')}>PACKAGES</button>
-              <button className="nav-link-btn" onClick={() => navigate('/gallery')}>GALLERY</button>
-          </div>
-
-          <div className="nav-cta bg-neo-pink" onClick={() => navigate('/layout')}>
-              <span>BOOK NOW</span>
-              <ArrowUpRight size={24} strokeWidth={3} />
-          </div>
-      </header>
+      <UserNavbar />
 
       <main className="brutal-main">
         <div className="mt-12 mb-12">

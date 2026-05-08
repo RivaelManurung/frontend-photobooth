@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Image as ImageIcon, ArrowUpRight, Zap, Camera, Smile, Download } from 'lucide-react';
+import UserNavbar from '../../components/layout/UserNavbar';
 import '../../styles/LandingPage.css';
 
 export default function Landing({ recentPhotos }) {
@@ -9,25 +10,7 @@ export default function Landing({ recentPhotos }) {
     return (
         <div className="landing-container">
             {/* --- HEADER --- */}
-            <header className="brutal-nav">
-                <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
-                    <h1 className="logo-text">SNAP!</h1>
-                    <span className="logo-subtext">PHOTOBOOTH</span>
-                </div>
-                
-                <div className="nav-links-center">
-                    <button className="nav-link-btn active">HOME</button>
-                    <button className="nav-link-btn" onClick={() => navigate('/packages')}>PACKAGES</button>
-                    <button className="nav-link-btn" onClick={() => navigate('/gallery')}>GALLERY</button>
-                    <button className="nav-link-btn" onClick={() => navigate('/about')}>ABOUT</button>
-                    <button className="nav-link-btn" onClick={() => navigate('/contact')}>CONTACT</button>
-                </div>
-
-                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/packages')}>
-                    <span>BOOK NOW</span>
-                    <ArrowUpRight size={24} strokeWidth={3} />
-                </div>
-            </header>
+            <UserNavbar />
 
             <main className="brutal-main">
                 {/* --- HERO SECTION --- */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, MessageSquare, MapPin, Phone, Send, ArrowLeft, Camera, ArrowUpRight } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import UserNavbar from '../../components/layout/UserNavbar';
 import '../../styles/LandingPage.css';
 
 const ContactUs = () => {
@@ -26,24 +27,7 @@ const ContactUs = () => {
   return (
     <div className="landing-container">
       {/* --- HEADER --- */}
-      <header className="brutal-nav">
-          <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
-              <h1 className="logo-text">SNAP!</h1>
-              <span className="logo-subtext">PHOTOBOOTH</span>
-          </div>
-          
-          <div className="nav-links-center">
-              <button className="nav-link-btn" onClick={() => navigate('/')}>HOME</button>
-              <button className="nav-link-btn" onClick={() => navigate('/packages')}>PACKAGES</button>
-              <button className="nav-link-btn" onClick={() => navigate('/gallery')}>GALLERY</button>
-              <button className="nav-link-btn active">CONTACT</button>
-          </div>
-
-          <div className="nav-cta bg-neo-pink" onClick={() => navigate('/packages')}>
-              <span>BOOK NOW</span>
-              <ArrowUpRight size={24} strokeWidth={3} />
-          </div>
-      </header>
+      <UserNavbar />
 
       <main className="brutal-main">
         <section className="py-20 grid grid-cols-1 lg:grid-cols-2 gap-16">
