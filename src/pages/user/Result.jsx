@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, RefreshCw, Check, Loader2, Cloud, Sliders, Sparkles, Palette } from 'lucide-react';
+import { Download, RefreshCw, Check, Loader2, Cloud, Sliders, Sparkles, Palette, ArrowUpRight } from 'lucide-react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import { photoAPI } from '../../lib/api';
 import '../../styles/ResultPage.css';
@@ -456,6 +456,10 @@ export default function Result() {
               {busy    ? <><Loader2 size={18} className="spin"/> Rendering...</>
                : saved ? <><Check size={18}/> Tersimpan!</>
                        : <><Download size={18}/> Download Strip</>}
+            </button>
+            <button className="finish-btn bg-black text-white p-4 rounded-full font-black uppercase text-sm mt-4 w-full flex items-center justify-center gap-2 hover:bg-neo-pink transition-colors" 
+                    onClick={() => { resetFlow(); navigate('/'); }}>
+               FINISH SESSION <ArrowUpRight size={18} strokeWidth={3} />
             </button>
             {saved && (
               <div className="share-section mt-6 p-6 glass rounded-3xl animate-in fade-in slide-in-from-bottom duration-700">

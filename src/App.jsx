@@ -43,6 +43,9 @@ import TermsOfService from './pages/user/TermsOfService';
 import PrivacyPolicy from './pages/user/PrivacyPolicy';
 import Profile from './pages/user/Profile';
 import OrderHistory from './pages/user/OrderHistory';
+import Packages from './pages/user/Packages';
+import Checkout from './pages/user/Checkout';
+import { usePhotobooth } from './context/PhotoboothContext';
 
 // Shared & Auth
 import Login from './pages/Login';
@@ -61,6 +64,13 @@ const ProtectedAdminRoute = ({ children }) => {
   return children;
 };
 
+// Paid Route Component for Photobooth Flow
+const PaidRoute = ({ children }) => {
+  const { paymentVerified } = usePhotobooth();
+  if (!paymentVerified) return <Navigate to="/packages" replace />;
+  return children;
+};
+
 /**
  * User-facing photobooth flow.
  * State is managed via PhotoboothContext — no prop drilling needed.
@@ -69,10 +79,15 @@ function UserFlow() {
   return (
     <Routes>
       <Route path="/"        element={<Landing />} />
-      <Route path="/layout"  element={<LayoutSelection />} />
-      <Route path="/style"   element={<StyleSelection />} />
-      <Route path="/booth"   element={<PhotoBooth />} />
-      <Route path="/result"  element={<Result />} />
+      <Route path="/packages" element={<Packages />} />
+      <Route path="/checkout/:packageId" element={<Checkout />} />
+      
+      {/* Protected Photobooth Flow */}
+      <Route path="/layout"  element={<PaidRoute><LayoutSelection /></PaidRoute>} />
+      <Route path="/style"   element={<PaidRoute><StyleSelection /></PaidRoute>} />
+      <Route path="/booth"   element={<PaidRoute><PhotoBooth /></PaidRoute>} />
+      <Route path="/result"  element={<PaidRoute><Result /></PaidRoute>} />
+      
       <Route path="/gallery" element={<Gallery />} />
       <Route path="/features" element={<Features />} />
       <Route path="/about"    element={<AboutUs />} />

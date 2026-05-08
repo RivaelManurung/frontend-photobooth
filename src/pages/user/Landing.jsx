@@ -17,13 +17,13 @@ export default function Landing({ recentPhotos }) {
                 
                 <div className="nav-links-center">
                     <button className="nav-link-btn active">HOME</button>
-                    <button className="nav-link-btn" onClick={() => navigate('/layout')}>PACKAGES</button>
+                    <button className="nav-link-btn" onClick={() => navigate('/packages')}>PACKAGES</button>
                     <button className="nav-link-btn" onClick={() => navigate('/gallery')}>GALLERY</button>
                     <button className="nav-link-btn" onClick={() => navigate('/about')}>ABOUT</button>
                     <button className="nav-link-btn" onClick={() => navigate('/contact')}>CONTACT</button>
                 </div>
 
-                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/layout')}>
+                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/packages')}>
                     <span>BOOK NOW</span>
                     <ArrowUpRight size={24} strokeWidth={3} />
                 </div>
@@ -44,10 +44,10 @@ export default function Landing({ recentPhotos }) {
                             <p>MAKE EVERY MOMENT COUNT.</p>
                         </div>
                         <div className="hero-actions">
-                            <button className="hero-btn-primary bg-neo-yellow" onClick={() => navigate('/layout')}>
+                            <button className="hero-btn-primary bg-neo-yellow" onClick={() => navigate('/packages')}>
                                 BOOK NOW <ArrowUpRight size={24} strokeWidth={3} />
                             </button>
-                            <button className="hero-btn-secondary" onClick={() => navigate('/layout')}>
+                            <button className="hero-btn-secondary" onClick={() => navigate('/packages')}>
                                 VIEW PACKAGES
                             </button>
                         </div>

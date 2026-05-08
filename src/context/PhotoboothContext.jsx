@@ -6,7 +6,8 @@ const STORAGE_KEYS = {
   PHOTO_COUNT: 'pb_photo_count',
   SELECTED_TEMPLATE: 'pb_selected_template',
   SESSION: 'pb_session',
-  CAPTURED_IMAGES: 'pb_captured_images'
+  CAPTURED_IMAGES: 'pb_captured_images',
+  PAYMENT_VERIFIED: 'pb_payment_verified'
 };
 
 /**
@@ -48,6 +49,10 @@ export function PhotoboothProvider({ children }) {
     }
   });
 
+  const [paymentVerified, setPaymentVerified] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.PAYMENT_VERIFIED) === 'true';
+  });
+
   // --- Persistence Side Effects ---
 
   useEffect(() => {
@@ -84,6 +89,10 @@ export function PhotoboothProvider({ children }) {
     }
   }, [capturedImages]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PAYMENT_VERIFIED, paymentVerified);
+  }, [paymentVerified]);
+
   // --- Helper Methods ---
 
   const resetFlow = useCallback(() => {
@@ -91,6 +100,7 @@ export function PhotoboothProvider({ children }) {
     setSelectedTemplate(null);
     setSession(null);
     setCapturedImages([]);
+    setPaymentVerified(false);
     
     // Clear all storage
     Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
@@ -103,6 +113,7 @@ export function PhotoboothProvider({ children }) {
         selectedTemplate, setSelectedTemplate,
         session, setSession,
         capturedImages, setCapturedImages,
+        paymentVerified, setPaymentVerified,
         resetFlow,
       }}
     >

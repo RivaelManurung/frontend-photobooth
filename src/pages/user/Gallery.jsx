@@ -39,11 +39,11 @@ export default function Gallery() {
                 
                 <div className="nav-links-center">
                     <button className="nav-link-btn" onClick={() => navigate('/')}>HOME</button>
-                    <button className="nav-link-btn" onClick={() => navigate('/layout')}>PACKAGES</button>
+                    <button className="nav-link-btn" onClick={() => navigate('/packages')}>PACKAGES</button>
                     <button className="nav-link-btn active">GALLERY</button>
                 </div>
 
-                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/layout')}>
+                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/packages')}>
                     <span>BOOK NOW</span>
                     <ArrowUpRight size={24} strokeWidth={3} />
                 </div>
