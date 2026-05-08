@@ -34,7 +34,15 @@ const NAV_ITEMS = [
   { type: 'label', label: 'Finance' },
   { key: 'payments',  icon: CreditCard,      label: 'Payments',    path: '/admin/payments' },
   { key: 'promos',    icon: Tag,             label: 'Promo Codes', path: '/admin/promos' },
+  {
+    key: 'reports',
+    icon: FileText,
+    label: 'Reports & Analytics',
+    path: '/admin/reports',
+  },
   { type: 'label', label: 'System' },
+  { key: 'audit-logs', icon: FileText,      label: 'Audit Logs',  path: '/admin/audit-logs' },
+  { key: 'health',     icon: Settings,      label: 'System Health', path: '/admin/health' },
   {
     key: 'settings',
     icon: Settings,

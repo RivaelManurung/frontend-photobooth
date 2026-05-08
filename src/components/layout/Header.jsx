@@ -2,6 +2,7 @@ import { Bell, Search, Settings, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button, Input } from '../ui';
 import { useTheme } from '../../context/ThemeContext';
+import GlobalSearch from '../common/GlobalSearch';
 
 const Header = ({ title = "Dashboard", showActions = true }) => {
   const [user, setUser] = useState(null);
@@ -21,15 +22,9 @@ const Header = ({ title = "Dashboard", showActions = true }) => {
         <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
       </div>
 
-      {/* Center Section - Search (Optional) */}
+      {/* Center Section - Search */}
       <div className="hidden flex-1 items-center justify-center px-6 md:flex">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            className="h-9 w-full bg-muted/50 pl-9"
-          />
-        </div>
+        <GlobalSearch />
       </div>
 
       {/* Right Section - Actions */}

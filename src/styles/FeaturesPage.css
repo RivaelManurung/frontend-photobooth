@@ -1,9 +1,9 @@
 .features-container {
     min-height: 100vh;
-    background-color: #0f0f0f;
-    color: white;
-    padding-top: 80px;
-    background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
+    background-color: #fafaf9;
+    color: black;
+    padding-bottom: 5rem;
+    font-family: 'Lexend', sans-serif;
 }
 
 .features-content {
@@ -14,50 +14,71 @@
 
 .features-header {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 5rem;
 }
 
 .features-header h1 {
-    font-size: 3.5rem;
+    font-size: 4.5rem;
+    font-weight: 900;
     margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: -3px;
 }
 
 .features-header p {
-    color: #888;
-    font-size: 1.2rem;
+    color: #333;
+    font-size: 1.3rem;
+    font-weight: 600;
 }
 
 .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 3rem;
 }
 
 .feature-card {
-    padding: 2rem;
-    border-radius: 20px;
+    background: white;
+    padding: 2.5rem;
+    border: 4px solid black;
+    box-shadow: 10px 10px 0px 0px black;
     text-align: center;
-    transition: transform 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.1s;
 }
 
 .feature-card:hover {
-    transform: translateY(-10px);
-    background: rgba(255, 255, 255, 0.08);
+    transform: translate(-4px, -4px);
+    box-shadow: 15px 15px 0px 0px black;
 }
 
+.feature-card:nth-child(1) { border-color: var(--neo-cyan); }
+.feature-card:nth-child(2) { border-color: var(--neo-yellow); }
+.feature-card:nth-child(3) { border-color: var(--neo-pink); }
+.feature-card:nth-child(4) { border-color: var(--neo-purple); }
+
 .feature-icon {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     display: flex;
     justify-content: center;
+    background: white;
+    width: 80px;
+    height: 80px;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px black;
 }
 
 .feature-card h3 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 900;
     margin-bottom: 1rem;
+    text-transform: uppercase;
 }
 
 .feature-card p {
-    color: #aaa;
+    color: #444;
     line-height: 1.6;
+    font-weight: 500;
 }

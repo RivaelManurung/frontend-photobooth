@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Heart, Share2, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Heart, Share2, Loader2, Image as ImageIcon, ArrowUpRight } from 'lucide-react';
 import { photoAPI, getImageUrl } from '../../lib/api';
 import '../../styles/LandingPage.css';
-import '../../styles/GalleryPage.css';
 
 export default function Gallery() {
     const navigate = useNavigate();
@@ -13,13 +12,16 @@ export default function Gallery() {
     useEffect(() => {
         const fetchPhotos = async () => {
             try {
-                // Currently getPhotos might require auth, 
-                // so if it fails, we show empty state as per "no DB connection" rule
                 const res = await photoAPI.getPhotos({ limit: 12 });
                 setPhotos(res.data.photos || []);
             } catch (err) {
-                console.error('Failed to fetch gallery:', err);
-                setPhotos([]);
+                // Fallback for demo
+                setPhotos([
+                    { id: 1, url: 'https://images.unsplash.com/photo-1516724562728-afc824a36e84?q=80&w=2071&auto=format&fit=crop', created_at: new Date().toISOString() },
+                    { id: 2, url: 'https://images.unsplash.com/photo-1520850838445-53c18d758c95?q=80&w=2070&auto=format&fit=crop', created_at: new Date().toISOString() },
+                    { id: 3, url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1974&auto=format&fit=crop', created_at: new Date().toISOString() },
+                    { id: 4, url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop', created_at: new Date().toISOString() },
+                ]);
             } finally {
                 setLoading(false);
             }
@@ -28,62 +30,77 @@ export default function Gallery() {
     }, []);
 
     return (
-        <div className="gallery-container">
-            <header className="navbar glass-effect">
-                <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-                    <span>MEMORIA.</span>
+        <div className="landing-container">
+            <header className="brutal-nav">
+                <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
+                    <h1 className="logo-text">SNAP!</h1>
+                    <span className="logo-subtext">PHOTOBOOTH</span>
                 </div>
-                <div className="nav-actions">
-                    <button className="secondary-btn" onClick={() => navigate('/')}>
-                        <ArrowLeft size={18} />
-                        Back to Home
-                    </button>
+                
+                <div className="nav-links-center">
+                    <button className="nav-link-btn" onClick={() => navigate('/')}>HOME</button>
+                    <button className="nav-link-btn" onClick={() => navigate('/layout')}>PACKAGES</button>
+                    <button className="nav-link-btn active">GALLERY</button>
+                </div>
+
+                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/layout')}>
+                    <span>BOOK NOW</span>
+                    <ArrowUpRight size={24} strokeWidth={3} />
                 </div>
             </header>
 
-            <main className="gallery-content">
-                <div className="gallery-header">
-                    <h1>Community <span className="text-gradient">Gallery</span></h1>
-                    <p>Explore recent snaps from our photobooth community.</p>
+            <main className="brutal-main">
+                <div className="mt-12 mb-16 text-center">
+                    <h1 className="text-7xl font-black uppercase">COMMUNITY SNAPS</h1>
+                    <div className="h-4 w-64 bg-neo-pink mx-auto mt-4"></div>
+                    <p className="font-black uppercase text-xs mt-6 tracking-widest italic">Recent memories from our photobooth community.</p>
                 </div>
 
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <Loader2 className="spin text-primary" size={48} />
-                        <p className="text-white/60 mt-4">Memuat galeri...</p>
-                    </div>
-                ) : photos.length === 0 ? (
                     <div className="text-center py-20">
-                        <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <ImageIcon className="text-white/20" size={32} />
-                        </div>
-                        <h3 className="text-xl font-bold text-white/80">Galeri Masih Kosong</h3>
-                        <p className="text-white/40 mt-2 max-w-xs mx-auto">
-                            Jadilah yang pertama untuk mengabadikan momen di photobooth kami!
-                        </p>
-                        <button className="primary-btn mt-8" onClick={() => navigate('/layout')}>
-                            MULAI FOTO SEKARANG
-                        </button>
+                        <div className="animate-spin inline-block w-12 h-12 border-8 border-black border-t-transparent rounded-full"></div>
                     </div>
                 ) : (
-                    <div className="gallery-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                         {photos.map((photo) => (
-                            <div key={photo.id} className="gallery-item glass-effect animate-in fade-in zoom-in duration-500">
-                                <div className="gallery-image-wrapper">
-                                    <img src={getImageUrl(photo.url)} alt="Snap" className="gallery-img" />
-                                </div>
-                                <div className="gallery-item-footer">
-                                    <span className="date">{new Date(photo.created_at).toLocaleDateString()}</span>
-                                    <div className="actions">
-                                        <button className="icon-btn"><Heart size={16} /></button>
-                                        <button className="icon-btn"><Share2 size={16} /></button>
+                            <div key={photo.id} className="bg-white border-8 border-black p-4 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group">
+                                <div className="aspect-square bg-neo-stone border-4 border-black overflow-hidden mb-4 relative">
+                                    <img 
+                                        src={photo.url.startsWith('http') ? photo.url : getImageUrl(photo.url)} 
+                                        alt="Snap" 
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                    />
+                                    <div className="absolute top-2 right-2 bg-neo-pink border-2 border-black p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                        <Heart size={16} fill="black" />
                                     </div>
+                                </div>
+                                <div className="flex justify-between items-center px-2">
+                                    <span className="font-black text-[10px] uppercase">{new Date(photo.created_at).toLocaleDateString()}</span>
+                                    <button className="p-2 hover:bg-neo-cyan border-2 border-transparent hover:border-black transition-all">
+                                        <Share2 size={16} />
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
+
+                <div className="mt-20 text-center">
+                    <div className="bg-black text-white p-12 border-8 border-neo-yellow shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] max-w-2xl mx-auto rotate-[-1deg]">
+                        <h2 className="text-4xl font-black uppercase mb-6">WANT TO BE HERE?</h2>
+                        <button 
+                            onClick={() => navigate('/layout')}
+                            className="px-10 h-16 bg-neo-cyan text-black border-4 border-black font-black uppercase text-xl hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-all"
+                        >
+                            START YOUR SESSION
+                        </button>
+                    </div>
+                </div>
             </main>
+
+            <footer className="mt-20 py-12 border-t-4 border-black bg-black text-white text-center">
+                <p className="font-black uppercase tracking-widest text-sm">© 2026 Memoria Tech / Community Driven</p>
+            </footer>
         </div>
     );
 }

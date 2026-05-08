@@ -22,6 +22,9 @@ import Promos from './pages/admin/Promos';
 import Sessions from './pages/admin/Sessions';
 import SessionDetails from './pages/admin/SessionDetails';
 import Settings from './pages/admin/Settings';
+import Reports from './pages/admin/Reports';
+import AuditLogs from './pages/admin/AuditLogs';
+import Health from './pages/admin/Health';
 
 import UserDetails from './pages/admin/UserDetails';
 
@@ -34,9 +37,19 @@ import PhotoBooth from './pages/user/PhotoBooth';
 import Result from './pages/user/Result';
 import Gallery from './pages/user/Gallery';
 import Features from './pages/user/Features';
+import AboutUs from './pages/user/AboutUs';
+import ContactUs from './pages/user/ContactUs';
+import TermsOfService from './pages/user/TermsOfService';
+import PrivacyPolicy from './pages/user/PrivacyPolicy';
+import Profile from './pages/user/Profile';
+import OrderHistory from './pages/user/OrderHistory';
 
-// Shared
+// Shared & Auth
 import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
 
 // Protected Route Component for Admin
 const ProtectedAdminRoute = ({ children }) => {
@@ -62,6 +75,13 @@ function UserFlow() {
       <Route path="/result"  element={<Result />} />
       <Route path="/gallery" element={<Gallery />} />
       <Route path="/features" element={<Features />} />
+      <Route path="/about"    element={<AboutUs />} />
+      <Route path="/contact"  element={<ContactUs />} />
+      <Route path="/terms"    element={<TermsOfService />} />
+      <Route path="/privacy"  element={<PrivacyPolicy />} />
+      <Route path="/profile"  element={<Profile />} />
+      <Route path="/order-history" element={<OrderHistory />} />
+      <Route path="*"         element={<NotFound />} />
     </Routes>
   );
 }
@@ -102,9 +122,18 @@ function App() {
                 <Route path="sessions" element={<Sessions />} />
                 <Route path="sessions/:id" element={<SessionDetails />} />
 
+                <Route path="reports" element={<Reports />} />
+                <Route path="audit-logs" element={<AuditLogs />} />
+                <Route path="health" element={<Health />} />
+
                 <Route path="settings" element={<Settings />} />
                 <Route path="settings/profile" element={<Settings />} />
               </Route>
+
+              {/* Auth Routes */}
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* User Routes */}
               <Route path="/*" element={<UserFlow />} />

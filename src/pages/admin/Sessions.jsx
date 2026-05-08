@@ -12,7 +12,7 @@ import {
   Button, Badge, Checkbox, ConfirmDialog,
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  Pagination, SearchBar, EmptyState, Spinner, Separator,
+  Pagination, SearchBar, EmptyState, Spinner, Separator, Skeleton,
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
 } from '../../components/ui';
 
@@ -199,7 +199,36 @@ const Sessions = () => {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+                <div className="rounded-xl border bg-card overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="w-10"><Checkbox disabled /></TableHead>
+                        {columnVisibility.id && <TableHead>Session ID</TableHead>}
+                        {columnVisibility.user && <TableHead>User</TableHead>}
+                        {columnVisibility.template && <TableHead>Template</TableHead>}
+                        {columnVisibility.status && <TableHead>Status</TableHead>}
+                        {columnVisibility.duration && <TableHead>Duration</TableHead>}
+                        {columnVisibility.created && <TableHead>Started At</TableHead>}
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                          {columnVisibility.id && <TableCell><Skeleton className="h-4 w-16" /></TableCell>}
+                          {columnVisibility.user && <TableCell><Skeleton className="h-4 w-20" /></TableCell>}
+                          {columnVisibility.template && <TableCell><Skeleton className="h-4 w-24" /></TableCell>}
+                          {columnVisibility.status && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
+                          {columnVisibility.duration && <TableCell><Skeleton className="h-4 w-12" /></TableCell>}
+                          {columnVisibility.created && <TableCell><Skeleton className="h-4 w-24" /></TableCell>}
+                          <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : filteredSessions.length === 0 ? (
                 <EmptyState icon={Clock} title="No sessions found" description="No session data matches your criteria." />
               ) : (

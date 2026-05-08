@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, X, RotateCcw, AlertCircle } from 'lucide-react';
+import { Camera, X, RotateCcw, AlertCircle, ArrowUpRight } from 'lucide-react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
-import '../../styles/PhotoBooth.css';
+import '../../styles/LandingPage.css';
 
 const COUNTDOWN_TIME = 3;
 
@@ -21,13 +21,11 @@ export default function PhotoBooth() {
 
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
-    const streamRef = useRef(null); // Ref for stable stream access
-    const sessionStartedRef = useRef(false); // Ref to prevent double start
+    const streamRef = useRef(null);
+    const sessionStartedRef = useRef(false);
 
-    // SENIOR-FRONTEND: Separated camera logic from UI state to prevent flickering
     const startCamera = useCallback(async () => {
-        if (streamRef.current) return; // Already running
-
+        if (streamRef.current) return;
         setError(null);
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -35,18 +33,12 @@ export default function PhotoBooth() {
                     width: { ideal: 1920 },
                     height: { ideal: 1080 },
                     facingMode: 'user',
-                    frameRate: { ideal: 30 }
                 },
             });
-            
             streamRef.current = mediaStream;
             setStream(mediaStream);
-            
-            if (videoRef.current) {
-                videoRef.current.srcObject = mediaStream;
-            }
+            if (videoRef.current) videoRef.current.srcObject = mediaStream;
         } catch (err) {
-            console.error('Error accessing camera:', err);
             setError('Gagal mengakses kamera. Pastikan izin sudah diberikan.');
         }
     }, []);
@@ -59,29 +51,24 @@ export default function PhotoBooth() {
         }
     }, []);
 
-    // Handle Camera Lifecycle
     useEffect(() => {
         startCamera();
         return () => stopCamera();
     }, [startCamera, stopCamera]);
 
-    // Handle Prep Countdown & Auto Start
     useEffect(() => {
         if (!preparing) return;
-
         const timer = setInterval(() => {
             setPrepCountdown(prev => {
                 if (prev <= 1) {
                     clearInterval(timer);
                     setPreparing(false);
-                    // Auto trigger session after get ready
                     setTimeout(() => startSession(), 500);
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(timer);
     }, [preparing]);
 
@@ -96,33 +83,26 @@ export default function PhotoBooth() {
             const video = videoRef.current;
             const canvas = canvasRef.current;
             const context = canvas.getContext('2d');
-
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-
             context.save();
             context.translate(canvas.width, 0);
             context.scale(-1, 1);
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             context.restore();
-
-            const imageUrl = canvas.toDataURL('image/jpeg', 0.9);
-            setCapturedPhotos((prev) => [...prev, imageUrl]);
-            return imageUrl;
+            return canvas.toDataURL('image/jpeg', 0.9);
         }
         return null;
     };
 
     const startSession = async () => {
-        if (capturing || sessionStartedRef.current) return; // Prevent double start
-        
+        if (capturing || sessionStartedRef.current) return;
         sessionStartedRef.current = true;
         setCapturing(true);
-        setCapturedPhotos([]); // CLEAR existing photos before starting new session
+        setCapturedPhotos([]);
         const newPhotos = [];
 
         for (let i = 0; i < photoCount; i++) {
-            // Countdown phase
             await new Promise((resolve) => {
                 let count = COUNTDOWN_TIME;
                 setCountdown(count);
@@ -134,15 +114,15 @@ export default function PhotoBooth() {
                         clearInterval(timer);
                         setCountdown(null);
                         const img = captureImage();
-                        if (img) newPhotos.push(img);
+                        if (img) {
+                            newPhotos.push(img);
+                            setCapturedPhotos(prev => [...prev, img]);
+                        }
                         resolve();
                     }
                 }, 1000);
             });
-
-            if (i < photoCount - 1) {
-                await new Promise((r) => setTimeout(r, 1500));
-            }
+            if (i < photoCount - 1) await new Promise((r) => setTimeout(r, 1500));
         }
 
         setCapturing(false);
@@ -152,133 +132,111 @@ export default function PhotoBooth() {
 
     if (error) {
         return (
-            <div className="booth-container flex flex-col items-center justify-center p-6 text-center">
-                <AlertCircle className="text-destructive mb-4" size={64} />
-                <h2 className="text-2xl font-bold mb-2">Ops! Ada Masalah</h2>
-                <p className="text-muted-foreground mb-6">{error}</p>
-                <button 
-                    className="btn-premium px-6 py-3 bg-primary text-primary-foreground rounded-full flex items-center gap-2"
-                    onClick={startCamera}
-                >
-                    <RotateCcw size={20} /> Coba Lagi
-                </button>
+            <div className="landing-container min-h-screen flex flex-col items-center justify-center p-6 text-center bg-neo-stone">
+                <div className="bg-white border-8 border-black p-12 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-md">
+                    <AlertCircle size={80} className="text-neo-red mx-auto mb-6" />
+                    <h2 className="text-3xl font-black uppercase mb-4">CAMERA ERROR</h2>
+                    <p className="font-bold text-black/60 mb-8 uppercase text-xs">{error}</p>
+                    <button 
+                        className="w-full h-16 bg-neo-cyan border-4 border-black font-black uppercase text-xl hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all"
+                        onClick={() => window.location.reload()}
+                    >
+                        RELOAD PAGE
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfbf7] p-4 font-['Lexend'] relative overflow-hidden">
-            {/* Background Dots */}
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }}></div>
+        <div className="landing-container bg-neo-stone">
+            {flash && <div className="fixed inset-0 bg-white z-[100]" />}
             
-            {flash && <div className="fixed inset-0 bg-white z-[100] animate-in fade-in duration-75" />}
-
-            <div className="relative z-10 w-full max-w-4xl">
-                {/* Header Area */}
-                <div className="flex justify-between items-center mb-8">
-                    <div className="bg-white border-[3px] border-black px-6 py-2 rotate-[-1deg] neo-shadow-sm">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter italic">Strike a Pose!</h2>
-                    </div>
-                    <div className="bg-[var(--neo-pink)] border-[3px] border-black px-4 py-2 rotate-[1deg] neo-shadow-sm">
-                        <span className="text-sm font-black uppercase">Photos: {capturedPhotos.length} / {photoCount}</span>
+            <header className="brutal-nav">
+                <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
+                    <h1 className="logo-text">SNAP!</h1>
+                </div>
+                <div className="nav-links-center">
+                    <div className="font-black uppercase text-xl italic tracking-tighter">
+                        CAPTURING PHOTO {capturedPhotos.length + 1} OF {photoCount}
                     </div>
                 </div>
+                <div className="nav-cta bg-neo-pink">
+                    <span>LIVE VIEW</span>
+                </div>
+            </header>
 
-                {/* Camera Container */}
-                <div className="relative border-[4px] border-black bg-white neo-shadow-lg overflow-hidden aspect-video">
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-cover"
-                        style={{ transform: 'scaleX(-1)' }}
-                    />
-                    <canvas ref={canvasRef} className="hidden" />
+            <main className="brutal-main flex flex-col items-center">
+                <div className="w-full max-w-5xl mt-8">
+                    {/* Main Camera Frame */}
+                    <div className="relative border-[10px] border-black bg-white shadow-[24px_24px_0px_0px_rgba(0,0,0,1)] overflow-hidden aspect-video">
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover"
+                            style={{ transform: 'scaleX(-1)' }}
+                        />
+                        <canvas ref={canvasRef} className="hidden" />
 
-                    {/* Countdown Overlay */}
-                    {countdown !== null && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm z-40">
-                            <span className="text-[12rem] font-black text-white drop-shadow-[10px_10px_0px_rgba(0,0,0,1)] animate-bounce">
-                                {countdown}
-                            </span>
-                        </div>
-                    )}
+                        {/* Countdown Overlay */}
+                        {countdown !== null && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm z-40">
+                                <span className="text-[15rem] font-black text-white drop-shadow-[12px_12px_0px_rgba(0,0,0,1)] animate-ping">
+                                    {countdown}
+                                </span>
+                            </div>
+                        )}
 
-                    {/* Prep Overlay */}
-                    {preparing && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md">
-                            <div className="bg-[var(--neo-yellow)] border-[4px] border-black p-8 text-center neo-shadow rotate-[-2deg]">
-                                <h2 className="text-5xl font-black text-black mb-2 uppercase tracking-tighter">GET READY!</h2>
-                                <p className="text-black font-bold mb-8 uppercase">Siapkan gaya terbaikmu...</p>
-                                <div className="text-9xl font-black text-black">
-                                    {prepCountdown}
+                        {/* Prep Overlay */}
+                        {preparing && (
+                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md">
+                                <div className="bg-neo-yellow border-8 border-black p-12 text-center shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] rotate-[-2deg]">
+                                    <h2 className="text-6xl font-black text-black mb-4 uppercase">GET READY!</h2>
+                                    <div className="h-4 w-40 bg-black mx-auto mb-8"></div>
+                                    <div className="text-[10rem] font-black text-black leading-none">
+                                        {prepCountdown}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
-                    {/* Capture Status Overlay */}
-                    {capturing && !countdown && (
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40">
-                            <div className="bg-[var(--neo-cyan)] border-[3px] border-black px-8 py-3 neo-shadow font-black uppercase text-xl animate-pulse">
-                                Pose! Foto {capturedPhotos.length + 1}
+                    {/* Strip Preview */}
+                    <div className="mt-16 grid grid-cols-4 gap-6">
+                        {[...Array(photoCount)].map((_, idx) => (
+                            <div key={idx} className="aspect-[3/4] border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+                                {capturedPhotos[idx] ? (
+                                    <img src={capturedPhotos[idx]} alt="Captured" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center opacity-10">
+                                        <Camera size={48} />
+                                    </div>
+                                )}
+                                <div className="absolute bottom-0 left-0 right-0 bg-black text-white text-[10px] font-black py-1 px-2 uppercase text-center">
+                                    SNAP #{idx + 1}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        ))}
+                    </div>
 
-                {/* Controls Area */}
-                <div className="mt-10 flex justify-center items-center gap-8">
-                    {!capturing && !preparing ? (
-                        <>
-                            <button
+                    {/* Quick Exit */}
+                    {!capturing && !preparing && (
+                        <div className="mt-12 flex justify-center">
+                            <button 
                                 onClick={() => navigate('/style')}
-                                className="bg-white border-[3px] border-black p-4 neo-shadow hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
+                                className="h-16 px-10 border-4 border-black font-black uppercase hover:bg-neo-pink transition-colors flex items-center gap-2"
                             >
-                                <X className="w-8 h-8" />
+                                <X size={24} /> CANCEL SESSION
                             </button>
-
-                            <button
-                                onClick={startSession}
-                                className="bg-[var(--neo-green)] border-[4px] border-black px-12 py-5 font-black text-2xl uppercase tracking-widest neo-shadow-lg hover:translate-x-[-4px] hover:translate-y-[-4px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-3"
-                            >
-                                <Camera className="w-8 h-8" />
-                                Capture
-                            </button>
-
-                            <button
-                                onClick={startCamera}
-                                className="bg-white border-[3px] border-black p-4 neo-shadow hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
-                            >
-                                <RotateCcw className="w-8 h-8" />
-                            </button>
-                        </>
-                    ) : (
-                        <div className="bg-[var(--neo-pink)] border-[4px] border-black px-12 py-5 font-black text-2xl uppercase tracking-widest neo-shadow flex items-center gap-3 animate-pulse">
-                            <Camera className="w-8 h-8" />
-                            Session in Progress
                         </div>
                     )}
                 </div>
+            </main>
 
-                {/* Thumbnail Strip */}
-                <div className="mt-12 grid grid-cols-4 gap-4">
-                    {[...Array(photoCount)].map((_, idx) => (
-                        <div key={idx} className="aspect-[3/4] border-[3px] border-black bg-white neo-shadow-sm relative overflow-hidden">
-                            {capturedPhotos[idx] ? (
-                                <img src={capturedPhotos[idx]} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center opacity-10">
-                                    <Camera className="w-12 h-12" />
-                                </div>
-                            )}
-                            <div className="absolute top-2 left-2 bg-black text-white text-[10px] font-black px-2 py-0.5 border border-white uppercase">
-                                Snap #{idx + 1}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <footer className="mt-20 py-12 border-t-4 border-black bg-black text-white text-center">
+                <div className="font-black uppercase tracking-[0.3em] text-xs">SNAP! PHOTOBOOTH / SESSION_ACTIVE_001</div>
+            </footer>
         </div>
     );
 }

@@ -17,7 +17,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import {
   Drawer, DrawerHeader, DrawerTitle, DrawerDescription, DrawerContent, DrawerFooter, DrawerClose,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  Pagination, SearchBar, EmptyState, Spinner, Separator
+  Pagination, SearchBar, EmptyState, Spinner, Separator, Skeleton
 } from '../../components/ui/index.jsx';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
@@ -240,7 +240,44 @@ const Users = () => {
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"><Checkbox disabled /></TableHead>
+                      {columnVisibility.user && <TableHead>User</TableHead>}
+                      {columnVisibility.email && <TableHead>Email</TableHead>}
+                      {columnVisibility.role && <TableHead>Role</TableHead>}
+                      {columnVisibility.subscription && <TableHead>Plan</TableHead>}
+                      {columnVisibility.status && <TableHead>Status</TableHead>}
+                      {columnVisibility.joined && <TableHead>Joined</TableHead>}
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                        {columnVisibility.user && (
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <div className="space-y-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-2 w-16" />
+                              </div>
+                            </div>
+                          </TableCell>
+                        )}
+                        {columnVisibility.email && <TableCell><Skeleton className="h-4 w-32" /></TableCell>}
+                        {columnVisibility.role && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
+                        {columnVisibility.subscription && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
+                        {columnVisibility.status && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
+                        {columnVisibility.joined && <TableCell><Skeleton className="h-4 w-20" /></TableCell>}
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               ) : filteredUsers.length === 0 ? (
                 <EmptyState icon={UsersIcon} title="No users found" description="Try adjusting your filters or search query." />
               ) : (

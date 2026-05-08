@@ -13,7 +13,7 @@ import {
   Tabs, TabsList, TabsTrigger, TabsContent,
   Pagination, SearchBar, EmptyState, Spinner,
   Separator, Button, Badge, Select, Checkbox, ConfirmDialog,
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger
+  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, Skeleton
 } from '../../components/ui';
 
 import { photoAPI, getImageUrl } from '../../lib/api';
@@ -195,7 +195,53 @@ const Photos = () => {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+                viewMode === 'grid' ? (
+                  <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="rounded-xl border bg-card overflow-hidden">
+                        <Skeleton className="aspect-[3/4] w-full" />
+                        <div className="p-3 space-y-2">
+                          <div className="flex justify-between">
+                            <Skeleton className="h-3 w-12" />
+                            <Skeleton className="h-3 w-3 rounded-full" />
+                          </div>
+                          <Skeleton className="h-2 w-20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border bg-card overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow>
+                          <TableHead className="w-10"><Checkbox disabled /></TableHead>
+                          {columnVisibility.preview && <TableHead>Preview</TableHead>}
+                          {columnVisibility.id && <TableHead>ID</TableHead>}
+                          {columnVisibility.user_id && <TableHead>User</TableHead>}
+                          {columnVisibility.template && <TableHead>Template</TableHead>}
+                          {columnVisibility.favorite && <TableHead>Status</TableHead>}
+                          {columnVisibility.date && <TableHead>Tanggal</TableHead>}
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                            {columnVisibility.preview && <TableCell><Skeleton className="w-10 h-14" /></TableCell>}
+                            {columnVisibility.id && <TableCell><Skeleton className="h-4 w-12" /></TableCell>}
+                            {columnVisibility.user_id && <TableCell><Skeleton className="h-4 w-20" /></TableCell>}
+                            {columnVisibility.template && <TableCell><Skeleton className="h-4 w-24" /></TableCell>}
+                            {columnVisibility.favorite && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
+                            {columnVisibility.date && <TableCell><Skeleton className="h-4 w-24" /></TableCell>}
+                            <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )
               ) : filtered.length === 0 ? (
                 <EmptyState icon={ImageIcon} title="Tidak ada foto" description="Data foto tidak ditemukan." />
               ) : viewMode === 'grid' ? (

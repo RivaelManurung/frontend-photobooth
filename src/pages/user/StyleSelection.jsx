@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { templatesAPI, sessionAPI } from '../../lib/api';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import '../../styles/SelectionScreens.css';
@@ -78,14 +78,25 @@ export default function StyleSelection() {
 
     return (
         <div className="selection-container">
-            {creating && (
-                <div className="creating-overlay">
-                    <Loader2 className="spin" size={40} />
-                    <p>Menyiapkan sesi foto...</p>
+            <header className="brutal-nav w-full">
+                <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
+                    <h1 className="logo-text">SNAP!</h1>
+                    <span className="logo-subtext">PHOTOBOOTH</span>
                 </div>
-            )}
+                
+                <div className="nav-links-center">
+                    <button className="nav-link-btn" onClick={() => navigate('/')}>HOME</button>
+                    <button className="nav-link-btn active">PACKAGES</button>
+                    <button className="nav-link-btn" onClick={() => navigate('/gallery')}>GALLERY</button>
+                </div>
 
-            <div className="header-title">
+                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/layout')}>
+                    <span>BOOK NOW</span>
+                    <ArrowUpRight size={24} strokeWidth={3} />
+                </div>
+            </header>
+
+            <div className="header-title mt-12">
                 <div className="title-box wide">
                     <h1>PICK YOUR STYLE</h1>
                 </div>

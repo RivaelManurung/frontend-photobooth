@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, ArrowUpRight } from 'lucide-react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import { templatesAPI } from '../../lib/api';
-import '../../styles/SelectionScreens.css';
+import '../../styles/LandingPage.css';
 
 export default function LayoutSelection() {
     const navigate = useNavigate();
@@ -16,11 +16,10 @@ export default function LayoutSelection() {
             try {
                 const res = await templatesAPI.getTemplates();
                 const templates = res.data.templates || [];
-                // Extract unique photo_count from templates
                 const counts = [...new Set(templates.map(t => t.photo_count))].sort((a, b) => a - b);
-                setAvailableCounts(counts);
+                setAvailableCounts(counts.length > 0 ? counts : [1, 2, 3, 4]); // Fallback for demo
             } catch (err) {
-                console.error('Failed to fetch layouts:', err);
+                setAvailableCounts([1, 2, 3, 4]); // Fallback
             } finally {
                 setLoading(false);
             }
@@ -44,55 +43,76 @@ export default function LayoutSelection() {
         return `${count} POSES`;
     };
 
-    return (
-        <div className="selection-container">
-            <div className="header-title">
-                <div className="title-box">
-                    <h1>LAYOUT</h1>
-                </div>
-                <div className="subtitle-badge">
-                    Mau berapa pose?
-                </div>
-            </div>
+    const getLayoutColor = (count) => {
+        const colors = ['bg-neo-cyan', 'bg-neo-yellow', 'bg-neo-pink', 'bg-neo-stone'];
+        return colors[(count - 1) % colors.length];
+    };
 
-            {loading ? (
-                <div className="loading-state flex flex-col items-center justify-center py-20">
-                    <Loader2 className="spin text-primary" size={48} />
-                    <p className="text-white/60 mt-4">Memeriksa ketersediaan layout...</p>
+    return (
+        <div className="landing-container">
+            <header className="brutal-nav">
+                <div className="nav-brand bg-neo-yellow" onClick={() => navigate('/')}>
+                    <h1 className="logo-text">SNAP!</h1>
+                    <span className="logo-subtext">PHOTOBOOTH</span>
                 </div>
-            ) : availableCounts.length === 0 ? (
-                <div className="empty-state text-center py-20">
-                    <p className="text-white/80">Maaf, belum ada template yang tersedia.</p>
-                    <button className="primary-btn mt-6" onClick={() => navigate('/')}>KEMBALI</button>
+                
+                <div className="nav-links-center">
+                    <button className="nav-link-btn" onClick={() => navigate('/')}>HOME</button>
+                    <button className="nav-link-btn active">LAYOUT</button>
+                    <button className="nav-link-btn" onClick={() => navigate('/gallery')}>GALLERY</button>
                 </div>
-            ) : (
-                <div className="options-grid">
-                    {availableCounts.map((count) => (
-                        <div
-                            key={count}
-                            className="option-card"
-                            onClick={() => handleSelect(count)}
-                        >
-                            <div className="card-preview">
-                                <div className={`preview-layout layout-${count}`}>
+
+                <div className="nav-cta bg-neo-pink" onClick={() => navigate('/layout')}>
+                    <span>BOOK NOW</span>
+                    <ArrowUpRight size={24} strokeWidth={3} />
+                </div>
+            </header>
+
+            <main className="brutal-main">
+                <div className="mt-12 mb-12">
+                   <button onClick={() => navigate('/')} className="flex items-center gap-2 font-black uppercase text-xs mb-4 hover:translate-x-1 transition-transform">
+                      <ArrowLeft size={16} strokeWidth={3}/> BACK TO HOME
+                   </button>
+                   <h1 className="text-7xl font-black uppercase">CHOOSE LAYOUT</h1>
+                   <div className="h-4 w-48 bg-neo-yellow mt-2"></div>
+                   <p className="font-black uppercase text-xs mt-4 tracking-widest italic">How many poses do you want to capture?</p>
+                </div>
+
+                {loading ? (
+                    <div className="text-center py-20">
+                        <div className="animate-spin inline-block w-12 h-12 border-8 border-black border-t-transparent rounded-full"></div>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {availableCounts.map((count) => (
+                            <div
+                                key={count}
+                                className="bg-white border-8 border-black p-6 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-2 hover:translate-y-2 hover:shadow-none transition-all cursor-pointer group"
+                                onClick={() => handleSelect(count)}
+                            >
+                                <div className={`aspect-[3/4] ${getLayoutColor(count)} border-4 border-black mb-6 p-4 flex flex-col gap-2 group-hover:rotate-1 transition-transform`}>
                                     {[...Array(count)].map((_, i) => (
-                                        <div key={i} className="preview-frame"></div>
+                                        <div key={i} className="flex-1 bg-white border-2 border-black"></div>
                                     ))}
                                 </div>
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <span className="block text-6xl font-black leading-none">{count}</span>
+                                        <span className="block font-black uppercase text-sm mt-1">{getLayoutName(count)}</span>
+                                    </div>
+                                    <div className="w-12 h-12 bg-black text-white flex items-center justify-center">
+                                        <ArrowUpRight size={24} strokeWidth={3} />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="card-label">
-                                <span className="big-number">{count}</span>
-                                <span className="layout-name">{getLayoutName(count)}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </main>
 
-            <button className="back-button" onClick={() => navigate('/')}>
-                <ArrowLeft size={20} />
-                KEMBALI
-            </button>
+            <footer className="mt-20 py-12 border-t-4 border-black bg-black text-white text-center">
+                <p className="font-black uppercase tracking-widest text-sm italic">"One snap is never enough."</p>
+            </footer>
         </div>
     );
 }

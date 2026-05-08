@@ -16,6 +16,9 @@ const Layout = () => {
       case 'payments': return 'Payments';
       case 'promos': return 'Promo Codes';
       case 'templates': return 'Templates';
+      case 'reports': return 'Reports & Analytics';
+      case 'audit-logs': return 'Audit Logs';
+      case 'health': return 'System Health';
       case 'settings': return 'Settings';
       default: return 'Dashboard';
     }

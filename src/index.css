@@ -7,6 +7,15 @@
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
+    --neo-cyan: #00e5ff;
+    --neo-yellow: #eaff00;
+    --neo-pink: #ff5db1;
+    --neo-green: #00ff66;
+    --neo-purple: #bd00ff;
+    --neo-orange: #ff8a00;
+    --neo-stone: #e8e8e8;
+    --neo-red: #ff3d00;
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
