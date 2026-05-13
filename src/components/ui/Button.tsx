@@ -17,7 +17,12 @@ const buttonSizes = {
   icon: "h-10 w-10",
 }
 
-const Button = React.forwardRef(({ 
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: keyof typeof buttonVariants;
+  size?: keyof typeof buttonSizes;
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ 
   children, 
   className, 
   variant = "default", 

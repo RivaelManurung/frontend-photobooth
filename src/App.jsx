@@ -19,6 +19,8 @@ import TemplateCreate from './pages/admin/TemplateCreate';
 import Payments from './pages/admin/Payments';
 import PaymentDetails from './pages/admin/PaymentDetails';
 import Promos from './pages/admin/Promos';
+import PromoCreate from './pages/admin/PromoCreate';
+import PromoDetails from './pages/admin/PromoDetails';
 import Sessions from './pages/admin/Sessions';
 import SessionDetails from './pages/admin/SessionDetails';
 import Settings from './pages/admin/Settings';
@@ -134,6 +136,8 @@ function App() {
                 <Route path="payments" element={<Payments />} />
                 <Route path="payments/:id" element={<PaymentDetails />} />
                 <Route path="promos" element={<Promos />} />
+                <Route path="promos/create" element={<PromoCreate />} />
+                <Route path="promos/:id" element={<PromoDetails />} />
                 <Route path="sessions" element={<Sessions />} />
                 <Route path="sessions/:id" element={<SessionDetails />} />
 

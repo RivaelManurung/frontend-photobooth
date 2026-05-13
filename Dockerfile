@@ -1,67 +1,50 @@
-# ============================================================
 # Build Stage
-# ============================================================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files first (layer caching)
 COPY package*.json ./
-
-# Install all dependencies (needed for build)
 RUN npm ci
 
-# Copy source code
 COPY . .
-
-# Pass build-time environment variables for Vite
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
-# Build the Vite app
 RUN npm run build
 
-# ============================================================
 # Production Stage
-# ============================================================
-FROM node:20-alpine AS runner
+FROM nginx:alpine AS runner
 
-WORKDIR /app
+# Copy built assets
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install only express (lightweight static server)
-RUN npm install --save express
+# Copy nginx config
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 8080;
+    server_name localhost;
 
-# Copy built assets from builder
-COPY --from=builder /app/dist ./dist
+    root /usr/share/nginx/html;
+    index index.html;
 
-# Write the Express server file properly (avoid shell escaping issues)
-COPY <<'EOF' server.js
-const express = require('express');
-const path = require('path');
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
-const app = express();
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
 
-// Railway injects PORT automatically — fallback to 8080
-const PORT = process.env.PORT || 8080;
+    # Cache headers for static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|otf)$ {
+        expires 1y;
+        add_header Cache-Control "public, no-transform";
+    }
 
-// Serve static files from Vite build output
-app.use(express.static(path.join(__dirname, 'dist'), {
-  maxAge: '1d',
-  etag: true,
-}));
-
-// SPA fallback: serve index.html for all unmatched routes
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Admin Frontend is running on port ${PORT}`);
-});
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
 EOF
 
-# Tell Railway/Docker what port this container listens on
 EXPOSE 8080
 
-# Start the server
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]
