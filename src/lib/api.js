@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 const isProd = import.meta.env.PROD;
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.NEXT_PUBLIC_API_URL || import.meta.env.VITE_API_URL;
 
 // Fallback logic for production vs development
 const API_BASE_URL = VITE_API_URL || (isProd ? '/api/v1' : 'http://localhost:8080/api/v1');
 const BACKEND_URL = API_BASE_URL.replace('/api/v1', '');
 
 if (isProd && !VITE_API_URL) {
-  console.warn('⚠️ VITE_API_URL is not defined in production. API calls might fail if not proxied.');
+  console.warn('⚠️ VITE_API_URL or NEXT_PUBLIC_API_URL is not defined in production.');
 }
 
 // Helper to convert relative URLs to absolute URLs
@@ -32,6 +32,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
 });
 
@@ -50,10 +51,19 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle errors
-// ONLY redirect to login if we're in admin area (not user flow)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Log technical error only in development
+    if (import.meta.env.DEV) {
+      console.error('[API Error]', error);
+    }
+
+    // Handle Network Errors
+    if (!error.response) {
+      return Promise.reject(new Error('Template gagal dimuat. Coba refresh atau periksa koneksi.'));
+    }
+
     if (error.response?.status === 401) {
       const isAdminRoute = window.location.pathname.startsWith('/admin');
       if (isAdminRoute) {
@@ -61,8 +71,6 @@ api.interceptors.response.use(
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
-      // For user routes: just reject the promise silently
-      // StyleSelection already has a try/catch that navigates anyway
     }
     return Promise.reject(error);
   }

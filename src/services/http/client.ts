@@ -1,13 +1,14 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_URL = import.meta.env.NEXT_PUBLIC_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
 });
 
@@ -29,11 +30,27 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    // Log technical error only in development
+    if (import.meta.env.DEV) {
+      console.error('[API Error]', {
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config
+      });
+    }
+
     const originalRequest = error.config;
     
+    // Handle Network Errors (No response)
+    if (!error.response) {
+      toast.error('Gagal menghubungi server. Periksa koneksi internet Anda.');
+      return Promise.reject(error);
+    }
+
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && originalRequest) {
-      // Clear local storage or try to refresh token here
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
@@ -42,8 +59,8 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Standardized error handling
-    const message = (error.response?.data as any)?.message || error.message || 'An unexpected error occurred';
+    // Standardized error handling for other status codes
+    const message = (error.response?.data as any)?.message || error.message || 'Terjadi kesalahan tidak terduga';
     
     if (error.response?.status !== 401) {
       toast.error(message);

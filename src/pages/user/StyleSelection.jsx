@@ -38,7 +38,7 @@ export default function StyleSelection() {
                 setTemplates(list);
             } catch (err) {
                 console.error('Failed to fetch templates:', err);
-                setError('Gagal memuat template dari server.');
+                setError('Template gagal dimuat. Coba refresh atau periksa koneksi.');
                 setTemplates([]);
             } finally {
                 setLoading(false);
